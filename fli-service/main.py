@@ -1,8 +1,11 @@
 from typing import Optional
 import asyncio
+import logging
 import re
 
 from fastapi import FastAPI, HTTPException
+
+logging.basicConfig(level=logging.INFO)
 from pydantic import BaseModel
 from fli.models import (
     Airport, PassengerInfo, SeatType, MaxStops, SortBy,
@@ -123,6 +126,7 @@ async def search_flights(req: FlightSearchRequest):
         results = SearchFlights().search(filters)
         return [_serialize_flight(f) for f in (results or [])[:10]]
     except Exception as e:
+        logging.exception("search_flights failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -138,6 +142,7 @@ async def cheapest_dates(req: DateRangeRequest):
         )
         return results or []
     except Exception as e:
+        logging.exception("cheapest_dates failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
