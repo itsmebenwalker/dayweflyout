@@ -39,10 +39,11 @@ export function buildDayMap(
 export function getOffWindows(
   roster: Roster,
   minNights = 2,
-  referenceDate?: Date
+  referenceDate?: Date,
+  horizonDays = 180
 ): DayWindow[] {
   const today = startOfDay(referenceDate ?? new Date())
-  const horizon = addDays(today, 180)
+  const horizon = addDays(today, horizonDays)
 
   const dayMap = buildDayMap(roster, today, horizon)
   const windows: DayWindow[] = []
