@@ -5,6 +5,7 @@ export async function searchFlights(params: {
   destination: string
   date: string
   passengers?: number
+  return_date?: string
 }) {
   if (!FLI_SERVICE_URL) throw new Error('FLI_SERVICE_URL not configured')
   const res = await fetch(`${FLI_SERVICE_URL}/flights/search`, {
@@ -32,5 +33,22 @@ export async function cheapestDates(params: {
     next: { revalidate: 3600 },
   })
   if (!res.ok) throw new Error('Date search failed')
+  return res.json()
+}
+
+export async function topDestinations(params: {
+  origin: string
+  date: string
+  return_date?: string
+  passengers?: number
+}) {
+  if (!FLI_SERVICE_URL) throw new Error('FLI_SERVICE_URL not configured')
+  const res = await fetch(`${FLI_SERVICE_URL}/flights/top-destinations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+    next: { revalidate: 3600 },
+  })
+  if (!res.ok) throw new Error('Top destinations search failed')
   return res.json()
 }

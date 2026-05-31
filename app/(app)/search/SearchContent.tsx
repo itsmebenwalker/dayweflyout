@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
-import { PlaneTakeoff, Hotel, MapPin, ExternalLink } from 'lucide-react'
+import { PlaneTakeoff, Hotel, MapPin, ExternalLink, Tag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOffWindows } from '@/lib/roster'
 import { buildSkyscannerUrl, buildBookingUrl } from '@/lib/affiliates'
@@ -12,42 +12,53 @@ import FlightCard from '@/components/deals/FlightCard'
 import HotelCard from '@/components/deals/HotelCard'
 import type { Flight, Roster, DayWindow } from '@/lib/types'
 
+type TripType = 'return' | 'one-way'
+
+interface TopDest {
+  destination: string
+  price: number
+  duration_minutes: number
+  stops: number
+  airline: string
+}
+
+function formatDuration(minutes: number) {
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
 export default function SearchContent() {
   const searchParams = useSearchParams()
 
   const [homeAirport, setHomeAirport] = useState(searchParams.get('origin') ?? 'PER')
   const [destination, setDestination] = useState(searchParams.get('dest') ?? '')
+  const [tripType, setTripType] = useState<TripType>('return')
   const [windows, setWindows] = useState<DayWindow[]>([])
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [flights, setFlights] = useState<Flight[]>([])
   const [flightsLoading, setFlightsLoading] = useState(false)
   const [flightsError, setFlightsError] = useState('')
   const [dataLoading, setDataLoading] = useState(true)
+  const [topDests, setTopDests] = useState<TopDest[]>([])
+  const [discovering, setDiscovering] = useState(false)
 
   // Load user's off windows and profile
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
       const [profileRes, rosterRes] = await Promise.all([
         supabase.from('profiles').select('home_airport').eq('id', user.id).single(),
-        supabase
-          .from('rosters')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+        supabase.from('rosters').select('*').eq('user_id', user.id)
+          .order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ])
 
       if (profileRes.data && !searchParams.get('origin')) {
         setHomeAirport(profileRes.data.home_airport)
       }
-
       if (rosterRes.data) {
         const ws = getOffWindows(rosterRes.data as Roster)
         setWindows(ws)
@@ -65,7 +76,7 @@ export default function SearchContent() {
 
   const selectedWindow = windows[selectedIdx] ?? null
 
-  // Search flights when destination or window changes
+  // Search flights when destination / window / tripType changes
   useEffect(() => {
     if (dataLoading || !destination || !selectedWindow) return
 
@@ -76,15 +87,19 @@ export default function SearchContent() {
       setFlightsError('')
       setFlights([])
       try {
+        const body: Record<string, unknown> = {
+          type: 'search',
+          origin: homeAirport,
+          destination,
+          date: format(selectedWindow!.start, 'yyyy-MM-dd'),
+        }
+        if (tripType === 'return') {
+          body.return_date = format(selectedWindow!.end, 'yyyy-MM-dd')
+        }
         const res = await fetch('/api/flights', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'search',
-            origin: homeAirport,
-            destination,
-            date: format(selectedWindow!.start, 'yyyy-MM-dd'),
-          }),
+          body: JSON.stringify(body),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Search failed')
@@ -98,10 +113,46 @@ export default function SearchContent() {
     }
 
     run()
-    return () => {
-      cancelled = true
+    return () => { cancelled = true }
+  }, [destination, selectedWindow, homeAirport, tripType, dataLoading])
+
+  // Discover top destinations when no destination is set
+  useEffect(() => {
+    if (dataLoading || destination || !selectedWindow) return
+
+    let cancelled = false
+    setDiscovering(true)
+    setTopDests([])
+
+    async function discover() {
+      try {
+        const body: Record<string, unknown> = {
+          type: 'top-destinations',
+          origin: homeAirport,
+          date: format(selectedWindow!.start, 'yyyy-MM-dd'),
+        }
+        if (tripType === 'return') {
+          body.return_date = format(selectedWindow!.end, 'yyyy-MM-dd')
+        }
+        const res = await fetch('/api/flights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (res.ok && !cancelled) {
+          const data = await res.json()
+          setTopDests(data)
+        }
+      } catch {
+        // silent — fallback to manual destination entry
+      } finally {
+        if (!cancelled) setDiscovering(false)
+      }
     }
-  }, [destination, selectedWindow, homeAirport, dataLoading])
+
+    discover()
+    return () => { cancelled = true }
+  }, [destination, selectedWindow, homeAirport, tripType, dataLoading])
 
   const destCity = airportCity(destination)
 
@@ -123,10 +174,8 @@ export default function SearchContent() {
     return (
       <div className="p-4 space-y-3 max-w-lg mx-auto">
         <div className="h-8 w-40 bg-slate-800 rounded-xl animate-pulse" />
-        <div className="h-12 bg-slate-800 rounded-xl animate-pulse" />
-        <div className="h-12 bg-slate-800 rounded-xl animate-pulse" />
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-36 bg-slate-800 rounded-2xl animate-pulse" />
+          <div key={i} className="h-12 bg-slate-800 rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -138,11 +187,10 @@ export default function SearchContent() {
 
       {/* Filter bar */}
       <div className="space-y-3 mb-6">
+        {/* Off window selector */}
         {windows.length > 0 && (
           <div>
-            <label className="block text-xs text-slate-400 font-medium mb-1.5">
-              Off window
-            </label>
+            <label className="block text-xs text-slate-400 font-medium mb-1.5">Off window</label>
             <select
               value={selectedIdx}
               onChange={(e) => setSelectedIdx(Number(e.target.value))}
@@ -157,6 +205,25 @@ export default function SearchContent() {
           </div>
         )}
 
+        {/* Trip type toggle */}
+        <div className="flex bg-slate-800 rounded-xl p-1">
+          {(['return', 'one-way'] as TripType[]).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTripType(t)}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                tripType === t
+                  ? 'bg-sky-400 text-slate-900'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {t === 'return' ? 'Return' : 'One-way'}
+            </button>
+          ))}
+        </div>
+
+        {/* Destination */}
         <div>
           <label className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-1.5">
             <MapPin size={12} />
@@ -172,9 +239,7 @@ export default function SearchContent() {
           />
           <datalist id="search-airports">
             {AIRPORTS.map(({ code, city }) => (
-              <option key={code} value={code}>
-                {city}
-              </option>
+              <option key={code} value={code}>{city}</option>
             ))}
           </datalist>
         </div>
@@ -184,21 +249,96 @@ export default function SearchContent() {
       {windows.length === 0 && (
         <div className="text-center py-12">
           <p className="text-slate-400 mb-4">No upcoming off windows found.</p>
-          <a href="/roster" className="text-sky-400 text-sm hover:underline">
-            Set up your roster
-          </a>
+          <a href="/roster" className="text-sky-400 text-sm hover:underline">Set up your roster</a>
         </div>
+      )}
+
+      {/* Discovery: top destinations when no dest entered */}
+      {!destination && selectedWindow && (
+        <>
+          {discovering && (
+            <div className="space-y-3 mb-6">
+              <div className="h-6 w-56 bg-slate-800 rounded animate-pulse" />
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-16 bg-slate-800 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          )}
+
+          {!discovering && topDests.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <PlaneTakeoff size={17} className="text-sky-400" />
+                <h2 className="text-white font-semibold">
+                  Cheapest {tripType === 'return' ? 'returns' : 'flights'} from {homeAirport}
+                </h2>
+              </div>
+              <div className="space-y-2">
+                {topDests.map((dest, i) => (
+                  <button
+                    key={dest.destination}
+                    type="button"
+                    onClick={() => setDestination(dest.destination)}
+                    className="w-full flex items-center justify-between bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-2xl px-4 py-3.5 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-600 text-sm font-mono w-4 shrink-0">{i + 1}</span>
+                      <div>
+                        <p className="text-white font-medium">{airportCity(dest.destination)}</p>
+                        <p className="text-slate-500 text-xs mt-0.5">
+                          {dest.stops === 0 ? 'Direct' : `${dest.stops} stop${dest.stops > 1 ? 's' : ''}`}
+                          {' · '}{formatDuration(dest.duration_minutes)}
+                          {' · '}{dest.airline}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="flex items-center gap-1 text-sky-400 font-bold shrink-0">
+                      <Tag size={12} />
+                      ${dest.price}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!discovering && topDests.length === 0 && (
+            <p className="text-slate-500 text-sm text-center py-6">
+              Enter a destination above to search for flights.
+            </p>
+          )}
+        </>
       )}
 
       {/* Results */}
       {destination && selectedWindow && (
         <>
+          {/* Hotel section — shown first */}
+          {hotelUrl && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Hotel size={17} className="text-sky-400" />
+                <h2 className="text-white font-semibold">Hotels</h2>
+                <span className="text-slate-500 text-sm">{destCity}</span>
+              </div>
+              <HotelCard
+                destination={destCity}
+                checkin={selectedWindow.start}
+                checkout={selectedWindow.end}
+                nights={Math.max(1, selectedWindow.durationNights - 1)}
+                bookUrl={hotelUrl}
+              />
+            </div>
+          )}
+
           {/* Flights section */}
           <div className="flex items-center gap-2 mb-3">
             <PlaneTakeoff size={17} className="text-sky-400" />
             <h2 className="text-white font-semibold">Flights</h2>
             <span className="text-slate-500 text-sm">
-              {homeAirport} → {destination} · {format(selectedWindow.start, 'd MMM')}
+              {homeAirport} {tripType === 'return' ? '⇄' : '→'} {destination}
+              {' · '}{format(selectedWindow.start, 'd MMM')}
+              {tripType === 'return' && ` – ${format(selectedWindow.end, 'd MMM')}`}
             </span>
           </div>
 
@@ -214,7 +354,7 @@ export default function SearchContent() {
             <div className="bg-slate-800 rounded-2xl p-4 mb-6">
               <p className="text-slate-400 text-sm mb-3">
                 {flightsError.includes('not configured') || flightsError.includes('503')
-                  ? 'Live prices unavailable — search directly on Skyscanner.'
+                  ? 'Live prices unavailable — search on Skyscanner.'
                   : 'Could not load prices. Try Skyscanner.'}
               </p>
               {fallbackFlightUrl && (
@@ -261,24 +401,6 @@ export default function SearchContent() {
                 />
               ))}
             </div>
-          )}
-
-          {/* Hotels section */}
-          {hotelUrl && (
-            <>
-              <div className="flex items-center gap-2 mb-3 mt-2">
-                <Hotel size={17} className="text-sky-400" />
-                <h2 className="text-white font-semibold">Hotels</h2>
-                <span className="text-slate-500 text-sm">{destCity}</span>
-              </div>
-              <HotelCard
-                destination={destCity}
-                checkin={selectedWindow.start}
-                checkout={selectedWindow.end}
-                nights={Math.max(1, selectedWindow.durationNights - 1)}
-                bookUrl={hotelUrl}
-              />
-            </>
           )}
         </>
       )}

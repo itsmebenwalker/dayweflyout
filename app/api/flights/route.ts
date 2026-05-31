@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { searchFlights, cheapestDates } from '@/lib/flights'
+import { searchFlights, cheapestDates, topDestinations } from '@/lib/flights'
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>
@@ -17,16 +17,17 @@ export async function POST(request: NextRequest) {
 
   try {
     if (type === 'search') {
-      const { origin, destination, date, passengers } = params as {
+      const { origin, destination, date, passengers, return_date } = params as {
         origin: string
         destination: string
         date: string
         passengers?: number
+        return_date?: string
       }
       if (!origin || !destination || !date) {
         return NextResponse.json({ error: 'Missing origin, destination or date' }, { status: 400 })
       }
-      const results = await searchFlights({ origin, destination, date, passengers })
+      const results = await searchFlights({ origin, destination, date, passengers, return_date })
       return NextResponse.json(results)
     }
 
@@ -48,7 +49,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(results)
     }
 
-    return NextResponse.json({ error: 'Invalid type — use "search" or "cheapest-dates"' }, { status: 400 })
+    if (type === 'top-destinations') {
+      const { origin, date, return_date, passengers } = params as {
+        origin: string
+        date: string
+        return_date?: string
+        passengers?: number
+      }
+      if (!origin || !date) {
+        return NextResponse.json({ error: 'Missing origin or date' }, { status: 400 })
+      }
+      const results = await topDestinations({ origin, date, return_date, passengers })
+      return NextResponse.json(results)
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid type — use "search", "cheapest-dates" or "top-destinations"' },
+      { status: 400 }
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Flight search failed'
     const status = message.includes('not configured') ? 503 : 500
