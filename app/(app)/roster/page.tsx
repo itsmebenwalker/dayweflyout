@@ -48,7 +48,6 @@ export default function RosterPage() {
       if (rosterRes.data) {
         const r = rosterRes.data as Roster & { id: string }
         setRosterId(r.id)
-        setPatternType(r.pattern_type)
         if (r.pattern_type === 'swing') {
           if (r.days_on) setDaysOn(r.days_on)
           if (r.days_off) setDaysOff(r.days_off)
