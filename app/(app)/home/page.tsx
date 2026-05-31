@@ -137,7 +137,7 @@ export default async function DashboardPage() {
           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-300 text-sm font-medium hover:bg-slate-700 transition-colors"
         >
           <Search size={16} className="text-sky-400" />
-          Browse Deals
+          Browse
         </Link>
       </div>
     </div>
