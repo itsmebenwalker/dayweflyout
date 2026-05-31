@@ -112,7 +112,7 @@ export default function RosterPage() {
       setError('Failed to save. Please try again.')
     } else {
       await new Promise((res) => setTimeout(res, 1500))
-      router.push('/dashboard')
+      router.push('/home')
     }
     setSaving(false)
   }

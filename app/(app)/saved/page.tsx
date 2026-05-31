@@ -74,7 +74,7 @@ export default async function SavedPage() {
             Tap the bookmark on any destination in Find to save it here.
           </p>
           <Link
-            href="/search"
+            href="/find"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-400 text-slate-900 font-semibold text-sm hover:bg-sky-300 transition-colors"
           >
             Browse Deals

@@ -54,7 +54,7 @@ export default function SignupPage() {
     }
 
     // Email confirmation not required — go straight to dashboard
-    window.location.href = '/dashboard'
+    window.location.href = '/home'
   }
 
   if (emailSent) {

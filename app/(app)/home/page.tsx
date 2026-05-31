@@ -103,7 +103,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-white font-semibold">Cheapest returns for your break</h2>
             <Link
-              href={`/search?origin=${homeAirport}&from=${format(nextWindow.start, 'yyyy-MM-dd')}&to=${format(nextWindow.end, 'yyyy-MM-dd')}`}
+              href={`/find?origin=${homeAirport}&from=${format(nextWindow.start, 'yyyy-MM-dd')}&to=${format(nextWindow.end, 'yyyy-MM-dd')}`}
               className="text-sky-400 text-sm"
             >
               See all 10
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
           {roster ? 'Edit Roster' : 'Set Roster'}
         </Link>
         <Link
-          href="/search"
+          href="/find"
           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-300 text-sm font-medium hover:bg-slate-700 transition-colors"
         >
           <Search size={16} className="text-sky-400" />

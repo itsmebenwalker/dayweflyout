@@ -32,9 +32,9 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const isProtected = pathname.startsWith('/dashboard') ||
+  const isProtected = pathname.startsWith('/home') ||
     pathname.startsWith('/roster') ||
-    pathname.startsWith('/search') ||
+    pathname.startsWith('/find') ||
     pathname.startsWith('/profile')
 
   if (isProtected && !user) {
@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
 
   if ((pathname === '/login' || pathname === '/signup') && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 

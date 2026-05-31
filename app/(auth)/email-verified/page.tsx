@@ -13,7 +13,7 @@ export default function EmailVerifiedPage() {
           Your account is confirmed. Time to find some flights.
         </p>
         <Link
-          href="/dashboard"
+          href="/home"
           className="flex items-center justify-center w-full py-3 px-4 rounded-xl bg-sky-400 text-slate-900 font-semibold hover:bg-sky-300 transition-colors"
         >
           Go to Dashboard

@@ -53,7 +53,7 @@ export default async function DashboardDeals({ homeAirport, window }: Props) {
           from={window.start}
           to={window.end}
           priceFrom={deal.price}
-          href={`/search?origin=${homeAirport}&dest=${deal.destination}&from=${format(window.start, 'yyyy-MM-dd')}&to=${format(window.end, 'yyyy-MM-dd')}`}
+          href={`/find?origin=${homeAirport}&dest=${deal.destination}&from=${format(window.start, 'yyyy-MM-dd')}&to=${format(window.end, 'yyyy-MM-dd')}`}
         />
       ))}
     </div>

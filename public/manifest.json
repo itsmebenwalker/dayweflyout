@@ -2,7 +2,7 @@
   "name": "DayWeFlyOut",
   "short_name": "DWFO",
   "description": "Find cheap flights and hotels for your FIFO days off",
-  "start_url": "/dashboard",
+  "start_url": "/home",
   "display": "standalone",
   "background_color": "#0F172A",
   "theme_color": "#0F172A",

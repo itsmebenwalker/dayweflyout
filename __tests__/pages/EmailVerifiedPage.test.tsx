@@ -9,7 +9,7 @@ describe('EmailVerifiedPage', () => {
 
   it('renders a dashboard link', () => {
     render(<EmailVerifiedPage />)
-    expect(screen.getByRole('link', { name: /go to dashboard/i })).toHaveAttribute('href', '/dashboard')
+    expect(screen.getByRole('link', { name: /go to dashboard/i })).toHaveAttribute('href', '/home')
   })
 
   it('renders a confirmation message', () => {
