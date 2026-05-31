@@ -13,8 +13,12 @@ export async function searchFlights(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
     next: { revalidate: 1800 },
+    signal: AbortSignal.timeout(30_000),
   })
-  if (!res.ok) throw new Error('Flight search failed')
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body?.detail ?? body?.error ?? 'Flight search failed')
+  }
   return res.json()
 }
 
@@ -31,8 +35,12 @@ export async function cheapestDates(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
     next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(30_000),
   })
-  if (!res.ok) throw new Error('Date search failed')
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body?.detail ?? body?.error ?? 'Date search failed')
+  }
   return res.json()
 }
 
