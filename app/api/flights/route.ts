@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { searchFlights, cheapestDates, topDestinations } from '@/lib/flights'
-import { getUsdToAudRate, convertToAud } from '@/lib/currency'
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>
@@ -28,15 +27,8 @@ export async function POST(request: NextRequest) {
       if (!origin || !destination || !date) {
         return NextResponse.json({ error: 'Missing origin, destination or date' }, { status: 400 })
       }
-      const [results, rate] = await Promise.all([
-        searchFlights({ origin, destination, date, passengers, return_date }),
-        getUsdToAudRate(),
-      ])
-      const converted = results.map((f: { price: number }) => ({
-        ...f,
-        price: convertToAud(f.price, rate),
-      }))
-      return NextResponse.json(converted)
+      const results = await searchFlights({ origin, destination, date, passengers, return_date })
+      return NextResponse.json(results)
     }
 
     if (type === 'cheapest-dates') {
@@ -67,15 +59,8 @@ export async function POST(request: NextRequest) {
       if (!origin || !date) {
         return NextResponse.json({ error: 'Missing origin or date' }, { status: 400 })
       }
-      const [results, rate] = await Promise.all([
-        topDestinations({ origin, date, return_date, passengers }),
-        getUsdToAudRate(),
-      ])
-      const converted = results.map((d: { price: number }) => ({
-        ...d,
-        price: convertToAud(d.price, rate),
-      }))
-      return NextResponse.json(converted)
+      const results = await topDestinations({ origin, date, return_date, passengers })
+      return NextResponse.json(results)
     }
 
     return NextResponse.json(

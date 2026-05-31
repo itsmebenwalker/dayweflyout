@@ -1,7 +1,6 @@
 import { format } from 'date-fns'
 import { topDestinations } from '@/lib/flights'
 import { airportCity } from '@/lib/airports'
-import { getUsdToAudRate, convertToAud } from '@/lib/currency'
 import DealCard from './DealCard'
 import type { DayWindow } from '@/lib/types'
 
@@ -22,15 +21,11 @@ export default async function DashboardDeals({ homeAirport, window }: Props) {
   let deals: TopDest[] = []
 
   try {
-    const [raw, rate] = await Promise.all([
-      topDestinations({
-        origin: homeAirport,
-        date: format(window.start, 'yyyy-MM-dd'),
-        return_date: format(window.end, 'yyyy-MM-dd'),
-      }),
-      getUsdToAudRate(),
-    ])
-    deals = raw.map((d: TopDest) => ({ ...d, price: convertToAud(d.price, rate) }))
+    deals = await topDestinations({
+      origin: homeAirport,
+      date: format(window.start, 'yyyy-MM-dd'),
+      return_date: format(window.end, 'yyyy-MM-dd'),
+    })
   } catch {
     // fli-service unavailable — fall back gracefully (empty list)
   }
