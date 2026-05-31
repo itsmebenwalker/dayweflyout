@@ -23,12 +23,6 @@ function destGradient(code: string): string {
   return g[h % g.length]
 }
 
-function formatDuration(mins: number) {
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-
 export default async function SavedPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -115,13 +109,6 @@ export default async function SavedPage() {
                 <div className="flex items-start justify-between mb-1">
                   <div>
                     <p className="text-white font-semibold text-lg leading-tight">{cityName}</p>
-                    {meta?.airline && (
-                      <p className="text-slate-400 text-sm">
-                        {meta.airline}
-                        {meta.stops === 0 ? ' · direct' : meta.stops != null ? ` · ${meta.stops} stop${meta.stops > 1 ? 's' : ''}` : ''}
-                        {meta.duration_minutes ? ` · ${formatDuration(meta.duration_minutes)}` : ''}
-                      </p>
-                    )}
                   </div>
                   <span className="text-slate-500 text-xs font-mono mt-1">{deal.destination}</span>
                 </div>

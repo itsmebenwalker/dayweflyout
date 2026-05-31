@@ -379,14 +379,6 @@ export default function SearchContent() {
                       <SaveButton
                         destination={dest.destination}
                         cityName={resolveCity(dest.destination, dest.city_name)}
-                        affiliateUrl={fallbackFlightUrl ?? '#'}
-                        metadata={{
-                          trip_type: tripType,
-                          price: dest.price,
-                          airline: dest.airline,
-                          stops: dest.stops,
-                          duration_minutes: dest.duration_minutes,
-                        }}
                         isSaved={savedMap.has(dest.destination)}
                         savedId={savedMap.get(dest.destination)}
                         onToggle={(saved, id) => {

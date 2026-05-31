@@ -7,21 +7,13 @@ import { createClient } from '@/lib/supabase/client'
 interface Props {
   destination: string
   cityName: string
-  affiliateUrl: string
-  metadata: {
-    trip_type: 'return' | 'one-way'
-    price: number
-    airline: string
-    stops: number
-    duration_minutes: number
-  }
   isSaved: boolean
   savedId?: string
   onToggle?: (saved: boolean, id?: string) => void
 }
 
 export default function SaveButton({
-  destination, cityName, affiliateUrl, metadata,
+  destination, cityName,
   isSaved: initialSaved, savedId: initialId, onToggle,
 }: Props) {
   const [saved, setSaved] = useState(initialSaved)
@@ -47,8 +39,8 @@ export default function SaveButton({
           deal_type: 'flight',
           destination,
           start_date: new Date().toISOString().split('T')[0],
-          affiliate_url: affiliateUrl,
-          metadata: { city_name: cityName, ...metadata },
+          affiliate_url: '#',
+          metadata: { city_name: cityName },
         })
         .select('id')
         .single()
