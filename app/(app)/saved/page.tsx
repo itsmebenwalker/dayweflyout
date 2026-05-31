@@ -128,12 +128,6 @@ export default async function SavedPage() {
 
                 <div className="flex items-center justify-between mt-2">
                   <div>
-                    {meta?.price && (
-                      <p className="text-white">
-                        <span className="text-2xl font-bold">A${meta.price}</span>
-                        <span className="text-slate-400 text-sm ml-1.5">{meta.trip_type ?? 'return'}</span>
-                      </p>
-                    )}
                     {nextWindow && (
                       <p className="text-slate-500 text-xs mt-0.5">
                         from {format(nextWindow.start, 'd MMM yyyy')}
