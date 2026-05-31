@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
-import { PlaneTakeoff, Hotel, MapPin, ExternalLink, Tag, SlidersHorizontal } from 'lucide-react'
+import { PlaneTakeoff, Hotel, MapPin, ExternalLink, Tag, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import SaveButton from '@/components/deals/SaveButton'
 import { getOffWindows } from '@/lib/roster'
@@ -234,17 +234,20 @@ export default function SearchContent() {
         {windows.length > 0 && (
           <div>
             <label className="block text-xs text-slate-400 font-medium mb-1.5">Off window</label>
-            <select
-              value={selectedIdx}
-              onChange={(e) => setSelectedIdx(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-sky-400 transition-colors text-sm appearance-none"
-            >
+            <div className="relative">
+              <select
+                value={selectedIdx}
+                onChange={(e) => setSelectedIdx(Number(e.target.value))}
+                className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-sky-400 transition-colors text-sm appearance-none"
+              >
               {windows.slice(0, 8).map((w, i) => (
                 <option key={i} value={i}>
                   {format(w.start, 'd MMM')} – {format(w.end, 'd MMM')} · {w.durationNights}d
                 </option>
               ))}
-            </select>
+              </select>
+              <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            </div>
           </div>
         )}
 
