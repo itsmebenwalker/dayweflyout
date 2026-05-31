@@ -1,20 +1,23 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ExternalLink, Bookmark } from 'lucide-react'
+import { Bookmark, ChevronRight } from 'lucide-react'
+import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
+import { getOffWindows } from '@/lib/roster'
 import { airportCity } from '@/lib/airports'
+import type { Roster } from '@/lib/types'
 
-// Deterministic gradient per airport code
+// Lighter blue gradients — consistent per airport code
 function destGradient(code: string): string {
   const g = [
-    'from-blue-800 to-blue-600',
-    'from-slate-700 to-slate-500',
-    'from-teal-800 to-emerald-600',
-    'from-violet-800 to-purple-600',
-    'from-rose-800 to-orange-600',
-    'from-cyan-800 to-sky-600',
-    'from-indigo-800 to-blue-600',
-    'from-green-800 to-teal-600',
+    'from-sky-500 to-blue-400',
+    'from-blue-500 to-cyan-400',
+    'from-sky-600 to-sky-400',
+    'from-blue-600 to-sky-500',
+    'from-cyan-500 to-blue-400',
+    'from-sky-500 to-indigo-400',
+    'from-blue-400 to-sky-300',
+    'from-sky-600 to-cyan-500',
   ]
   const h = code.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
   return g[h % g.length]
@@ -31,12 +34,25 @@ export default async function SavedPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: rows } = await supabase
-    .from('saved_deals')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('deal_type', 'flight')
-    .order('saved_at', { ascending: false })
+  const [{ data: rows }, rosterRes] = await Promise.all([
+    supabase
+      .from('saved_deals')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('deal_type', 'flight')
+      .order('saved_at', { ascending: false }),
+    supabase
+      .from('rosters')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  const roster = rosterRes.data as Roster | null
+  const offWindows = roster ? getOffWindows(roster) : []
+  const nextWindow = offWindows[0] ?? null
 
   // Deduplicate — keep most recent per destination
   const seen = new Set<string>()
@@ -55,7 +71,7 @@ export default async function SavedPage() {
           <Bookmark size={36} className="text-slate-700 mx-auto mb-3" />
           <p className="text-slate-300 font-medium mb-1">Nothing saved yet</p>
           <p className="text-slate-500 text-sm mb-5">
-            Tap the bookmark on any destination in Deals to save it here.
+            Tap the bookmark on any destination in Find to save it here.
           </p>
           <Link
             href="/search"
@@ -82,25 +98,15 @@ export default async function SavedPage() {
           return (
             <Link
               key={deal.id}
-              href={`/search?dest=${deal.destination}`}
-              className="block rounded-2xl overflow-hidden bg-slate-800 hover:bg-slate-700 transition-colors"
+              href={`/saved/${deal.destination}`}
+              className="block rounded-2xl overflow-hidden bg-slate-800 hover:bg-slate-700/80 active:bg-slate-700 transition-colors"
             >
-              {/* Gradient header with flight path */}
+              {/* Gradient header */}
               <div className={`bg-gradient-to-br ${gradient} h-20 relative`}>
-                <svg
-                  viewBox="0 0 240 60"
-                  className="absolute inset-0 w-full h-full"
-                  preserveAspectRatio="none"
-                >
+                <svg viewBox="0 0 240 60" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
                   <circle cx="14" cy="48" r="5" fill="rgba(255,255,255,0.75)" />
                   <circle cx="226" cy="12" r="5" fill="rgba(255,255,255,0.75)" />
-                  <path
-                    d="M 14 48 Q 120 -8 226 12"
-                    stroke="rgba(255,255,255,0.55)"
-                    strokeWidth="1.5"
-                    fill="none"
-                    strokeDasharray="5 5"
-                  />
+                  <path d="M 14 48 Q 120 -8 226 12" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" fill="none" strokeDasharray="5 5" />
                 </svg>
               </div>
 
@@ -121,18 +127,20 @@ export default async function SavedPage() {
                 </div>
 
                 <div className="flex items-center justify-between mt-2">
-                  {meta?.price ? (
-                    <p className="text-white">
-                      <span className="text-2xl font-bold">A${meta.price}</span>
-                      <span className="text-slate-400 text-sm ml-1.5">{meta.trip_type ?? 'return'}</span>
-                    </p>
-                  ) : (
-                    <p className="text-slate-400 text-sm">Tap to find current prices</p>
-                  )}
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-700 text-sky-400 text-sm font-semibold hover:bg-slate-600 transition-colors">
-                    Find flights
-                    <ExternalLink size={13} />
-                  </span>
+                  <div>
+                    {meta?.price && (
+                      <p className="text-white">
+                        <span className="text-2xl font-bold">A${meta.price}</span>
+                        <span className="text-slate-400 text-sm ml-1.5">{meta.trip_type ?? 'return'}</span>
+                      </p>
+                    )}
+                    {nextWindow && (
+                      <p className="text-slate-500 text-xs mt-0.5">
+                        from {format(nextWindow.start, 'd MMM yyyy')}
+                      </p>
+                    )}
+                  </div>
+                  <ChevronRight size={18} className="text-slate-500 shrink-0" />
                 </div>
               </div>
             </Link>
