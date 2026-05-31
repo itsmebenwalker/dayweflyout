@@ -377,6 +377,8 @@ export default function SearchContent() {
               <p className="text-slate-400 text-sm mb-3">
                 {flightsError.includes('not configured') || flightsError.includes('503')
                   ? 'Live prices unavailable — search on Skyscanner.'
+                  : flightsError.includes('429') || flightsError.includes('Rate limited')
+                  ? 'Too many searches right now — prices will refresh shortly. Search on Skyscanner in the meantime.'
                   : 'Could not load prices. Try Skyscanner.'}
               </p>
               {fallbackFlightUrl && (
