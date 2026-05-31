@@ -121,10 +121,12 @@ export default function SearchContent() {
     if (dataLoading || destination || !selectedWindow) return
 
     let cancelled = false
-    setDiscovering(true)
-    setTopDests([])
 
     async function discover() {
+      if (!cancelled) {
+        setDiscovering(true)
+        setTopDests([])
+      }
       try {
         const body: Record<string, unknown> = {
           type: 'top-destinations',
