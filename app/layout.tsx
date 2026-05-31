@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     title: 'DayWeFlyOut',
   },
   icons: {
+    icon: [{ url: '/logo-mark.svg', type: 'image/svg+xml' }],
     apple: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
   },
 }
