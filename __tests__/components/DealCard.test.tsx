@@ -5,7 +5,7 @@ const base = {
   destination: 'Bali',
   from: new Date(2025, 5, 15),
   to: new Date(2025, 5, 21),
-  href: '/search?dest=DPS',
+  href: '/find?dest=DPS',
 }
 
 describe('DealCard', () => {
@@ -16,7 +16,7 @@ describe('DealCard', () => {
 
   it('links to the correct href', () => {
     render(<DealCard {...base} type="flight" />)
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/search?dest=DPS')
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/find?dest=DPS')
   })
 
   it('renders a price when priceFrom is provided', () => {

@@ -32,10 +32,24 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // Redirect old routes to new URLs (preserves query string)
+  if (pathname.startsWith('/dashboard')) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.replace('/dashboard', '/home')
+    return NextResponse.redirect(url, 301)
+  }
+  if (pathname.startsWith('/search')) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.replace('/search', '/find')
+    return NextResponse.redirect(url, 301)
+  }
+
   const isProtected = pathname.startsWith('/home') ||
     pathname.startsWith('/roster') ||
     pathname.startsWith('/find') ||
-    pathname.startsWith('/profile')
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/saved') ||
+    pathname.startsWith('/schedule')
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
