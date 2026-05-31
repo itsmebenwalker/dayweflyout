@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOffWindows } from '@/lib/roster'
 import { buildSkyscannerUrl, buildBookingUrl } from '@/lib/affiliates'
 import { AIRPORTS, airportCity } from '@/lib/airports'
-import FlightCard from '@/components/deals/FlightCard'
+import FlightSummaryCard from '@/components/deals/FlightSummaryCard'
 import HotelCard from '@/components/deals/HotelCard'
 import type { Flight, Roster, DayWindow } from '@/lib/types'
 
@@ -396,19 +396,16 @@ export default function SearchContent() {
           )}
 
           {!flightsLoading && flights.length > 0 && (
-            <div className="space-y-3 mb-6">
-              {flights.map((flight, i) => (
-                <FlightCard
-                  key={i}
-                  flight={flight}
-                  bookUrl={buildSkyscannerUrl({
-                    origin: homeAirport,
-                    destination,
-                    date: selectedWindow.start,
-                    returnDate: tripType === 'return' ? selectedWindow.end : undefined,
-                  })}
-                />
-              ))}
+            <div className="mb-6">
+              <FlightSummaryCard
+                flights={flights}
+                bookUrl={buildSkyscannerUrl({
+                  origin: homeAirport,
+                  destination,
+                  date: selectedWindow.start,
+                  returnDate: tripType === 'return' ? selectedWindow.end : undefined,
+                })}
+              />
             </div>
           )}
         </>

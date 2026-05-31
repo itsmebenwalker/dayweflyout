@@ -1,8 +1,25 @@
+import { getAirportByIata } from 'aircodes'
+
 export interface Airport {
   code: string
   city: string
 }
 
+// Display-name overrides — used when the aircodes city field isn't the most
+// recognisable traveller-facing name for our audience.
+const DISPLAY_OVERRIDES: Record<string, string> = {
+  PPP: 'Whitsunday Coast',
+  OOL: 'Gold Coast',
+  MCY: 'Sunshine Coast',
+}
+
+export function airportCity(code: string): string {
+  if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code]
+  const airport = getAirportByIata(code)
+  return airport?.city || code
+}
+
+// Subset used for <datalist> autocomplete in form inputs
 export const AIRPORTS: Airport[] = [
   { code: 'PER', city: 'Perth' },
   { code: 'SYD', city: 'Sydney' },
@@ -21,14 +38,12 @@ export const AIRPORTS: Airport[] = [
   { code: 'MKY', city: 'Mackay' },
   { code: 'ASP', city: 'Alice Springs' },
   { code: 'GET', city: 'Geraldton' },
-  { code: 'DPS', city: 'Bali' },
+  { code: 'DPS', city: 'Denpasar (Bali)' },
   { code: 'SIN', city: 'Singapore' },
   { code: 'PPP', city: 'Whitsunday Coast' },
   { code: 'MCY', city: 'Sunshine Coast' },
-  // International destinations whose airport names don't contain the city name
   { code: 'KUL', city: 'Kuala Lumpur' },
   { code: 'BKK', city: 'Bangkok' },
-  { code: 'DMK', city: 'Bangkok' },
   { code: 'NRT', city: 'Tokyo' },
   { code: 'HND', city: 'Tokyo' },
   { code: 'ICN', city: 'Seoul' },
@@ -36,10 +51,6 @@ export const AIRPORTS: Airport[] = [
   { code: 'CGK', city: 'Jakarta' },
   { code: 'MNL', city: 'Manila' },
 ]
-
-export function airportCity(code: string): string {
-  return AIRPORTS.find((a) => a.code === code)?.city ?? code
-}
 
 // Popular leisure destinations for FIFO workers (ordered by demand)
 export const POPULAR_DESTINATIONS = ['DPS', 'SYD', 'MEL', 'OOL', 'CNS', 'BNE', 'SIN']

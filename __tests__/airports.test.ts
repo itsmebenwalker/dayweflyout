@@ -7,8 +7,17 @@ describe('airportCity', () => {
   it('returns the city name for a known IATA code', () => {
     expect(airportCity('PER')).toBe('Perth')
     expect(airportCity('SYD')).toBe('Sydney')
-    expect(airportCity('DPS')).toBe('Bali')
-    expect(airportCity('KTA')).toBe('Karratha')
+    expect(airportCity('KUL')).toBe('Kuala Lumpur')
+    expect(airportCity('BKK')).toBe('Bangkok')
+  })
+
+  it('returns aircodes city for DPS (Denpasar (Bali))', () => {
+    expect(airportCity('DPS')).toBe('Denpasar (Bali)')
+  })
+
+  it('applies display overrides for tourist-facing names', () => {
+    expect(airportCity('OOL')).toBe('Gold Coast')
+    expect(airportCity('PPP')).toBe('Whitsunday Coast')
   })
 
   it('falls back to the IATA code itself for unknown airports', () => {

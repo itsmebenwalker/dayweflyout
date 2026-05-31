@@ -59,16 +59,17 @@ export default async function DashboardPage() {
 
       {/* Next days off */}
       {roster && (
-        <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 mb-5">
-          <div className="flex items-center justify-between mb-2">
+        <>
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <CalendarDays size={17} className="text-sky-400" />
               <span className="text-white font-medium">Your next days off</span>
             </div>
-            <Link href="/schedule" className="text-sky-400 text-xs">
+            <Link href="/schedule" className="text-sky-400 text-sm">
               View all
             </Link>
           </div>
+          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 mb-5">
           {nextWindow ? (
             <div>
               <p className="text-sky-400 font-semibold text-xl">
@@ -87,7 +88,8 @@ export default async function DashboardPage() {
               No upcoming off windows — check your roster settings.
             </p>
           )}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Deals — stream in via Suspense so greeting renders instantly */}
