@@ -52,8 +52,8 @@ async def search_flights(req: FlightSearchRequest):
                         "flight_number": leg.flight_number,
                         "departure": str(leg.departure_datetime),
                         "arrival": str(leg.arrival_datetime),
-                        "from": leg.departure_airport.value,
-                        "to": leg.arrival_airport.value,
+                        "from": leg.departure_airport.name,
+                        "to": leg.arrival_airport.name,
                     }
                     for leg in f.legs
                 ],

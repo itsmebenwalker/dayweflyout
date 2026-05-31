@@ -20,13 +20,13 @@ export default function FlightCard({ flight, bookUrl }: Props) {
     <div className="bg-slate-800 rounded-2xl p-4 space-y-3">
       {/* Route + price */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="flex items-center gap-1 text-sm font-medium text-white shrink-0">
+        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+          <span className="flex items-center gap-1 text-sm font-semibold text-white shrink-0">
             <PlaneTakeoff size={15} className="text-sky-400" />
             {firstLeg?.from ?? '—'}
           </span>
-          <span className="text-slate-600 text-sm">→</span>
-          <span className="flex items-center gap-1 text-sm font-medium text-white shrink-0">
+          <span className="text-slate-600 text-sm shrink-0">→</span>
+          <span className="flex items-center gap-1 text-sm font-semibold text-white shrink-0">
             <PlaneLanding size={15} className="text-sky-400" />
             {lastLeg?.to ?? '—'}
           </span>
