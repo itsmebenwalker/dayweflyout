@@ -156,9 +156,10 @@ Browser → Booking.com affiliate link   (hotel CTA)
 app/
   (auth)/login      Email login page
   (auth)/signup     Sign up page
-  (app)/dashboard   Home — next off window + deal cards
+  (app)/home        Home — next off window + deal cards
   (app)/roster      Swing pattern picker + manual calendar
-  (app)/search      Flight and hotel results
+  (app)/find        Flight and hotel results (filter chips, top destinations)
+  (app)/saved       Saved destinations + per-window detail view
   api/flights       Proxy to fli-service
   api/deals         Compute off windows, return deal suggestions
 components/

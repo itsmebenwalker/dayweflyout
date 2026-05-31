@@ -64,9 +64,9 @@ export default async function SavedDestPage({ params }: { params: Promise<{ dest
       {/* Gradient header */}
       <div className={`bg-gradient-to-br ${gradient} relative`} style={{ height: '140px' }}>
         <svg viewBox="0 0 360 100" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-          <circle cx="20" cy="80" r="6" fill="rgba(255,255,255,0.7)" />
-          <circle cx="340" cy="20" r="6" fill="rgba(255,255,255,0.7)" />
-          <path d="M 20 80 Q 180 -10 340 20" stroke="rgba(255,255,255,0.5)" strokeWidth="2" fill="none" strokeDasharray="6 6" />
+          <circle cx="20" cy="35" r="6" fill="rgba(255,255,255,0.7)" />
+          <circle cx="340" cy="15" r="6" fill="rgba(255,255,255,0.7)" />
+          <path d="M 20 35 Q 180 -15 340 15" stroke="rgba(255,255,255,0.5)" strokeWidth="2" fill="none" strokeDasharray="6 6" />
         </svg>
         <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between">
           <h1 className="text-white text-2xl font-bold drop-shadow">{cityName}</h1>

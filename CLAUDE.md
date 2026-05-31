@@ -189,7 +189,7 @@ export async function cheapestDates(params: {
 
 ### Risk note
 
-`fli` reverse-engineers Google Flights — it is not an official API. Google may change internals without notice. Monitor the [fli releases page](https://github.com/punitarani/fli/releases) and pin to a specific version in `requirements.txt` (e.g. `flights==0.8.1`). Have a fallback Skyscanner deep link ready if the service goes down.
+`fli` reverse-engineers Google Flights — it is not an official API. Google may change internals without notice. Monitor the [fli releases page](https://github.com/punitarani/fli/releases) and pin to a specific version in `requirements.txt` (e.g. `flights==0.8.5`). Have a fallback Skyscanner deep link ready if the service goes down.
 
 ---
 
@@ -269,25 +269,28 @@ dayweflyout/
 │   │   ├── login/page.tsx
 │   │   └── signup/page.tsx
 │   ├── (app)/
-│   │   ├── layout.tsx          # Bottom nav shell
-│   │   ├── dashboard/page.tsx  # Home / upcoming deals
-│   │   ├── roster/page.tsx     # Roster input
-│   │   └── search/page.tsx     # Flight + hotel results
+│   │   ├── layout.tsx              # Bottom nav shell
+│   │   ├── home/page.tsx           # Home / upcoming deals
+│   │   ├── roster/page.tsx         # Roster input (swing + manual calendar)
+│   │   ├── find/page.tsx           # Flight + hotel results (filter chips, top destinations)
+│   │   ├── saved/page.tsx          # Saved destinations list
+│   │   └── saved/[dest]/page.tsx   # Per-destination off-window tiles
 │   ├── api/
-│   │   ├── flights/route.ts    # Proxy to fli-service
+│   │   ├── flights/route.ts    # Proxy to fli-service (USD→AUD conversion)
 │   │   └── deals/route.ts      # Compute days off, return deals
 │   ├── layout.tsx              # Root layout (fonts, providers)
 │   └── globals.css
 ├── components/
 │   ├── ui/                     # Shared primitives (Button, Card, Input, Badge)
 │   ├── roster/
-│   │   ├── RosterCalendar.tsx
-│   │   ├── SwingPatternPicker.tsx
-│   │   └── DaysOffSummary.tsx
+│   │   ├── RosterCalendar.tsx  # Manual calendar — auto-highlights swing off days
+│   │   └── SwingPatternPicker.tsx
 │   ├── deals/
 │   │   ├── DealCard.tsx
 │   │   ├── FlightCard.tsx      # Shows real price from fli + Book CTA
-│   │   └── HotelCard.tsx
+│   │   ├── HotelCard.tsx
+│   │   ├── DashboardDeals.tsx  # Top destinations for next off window
+│   │   └── SaveButton.tsx      # Bookmark toggle → saved_deals table
 │   └── nav/
 │       └── BottomNav.tsx
 ├── lib/
@@ -297,11 +300,12 @@ dayweflyout/
 │   ├── flights.ts              # fli-service client functions
 │   ├── roster.ts               # Days-off computation logic
 │   ├── affiliates.ts           # Build Skyscanner/Booking.com deep links
+│   ├── currency.ts             # USD→AUD exchange rate (open.er-api.com, 6h cache)
 │   └── types.ts
 ├── supabase/
 │   └── migrations/
 │       └── 001_init.sql
-├── middleware.ts               # Auth redirect guard
+├── proxy.ts                    # Auth redirect guard + 301 redirects for old routes
 ├── .env.local                  # Local env vars (never commit)
 └── CLAUDE.md                   # This file
 ```
@@ -396,7 +400,7 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   // Standard Supabase SSR middleware pattern
-  // Refresh session, redirect to /login if not authenticated on /dashboard, /roster, /search
+  // Refresh session, redirect to /login if not authenticated on /home, /roster, /find, /saved, /schedule
 }
 
 export const config = {
@@ -506,10 +510,10 @@ Four tabs using Lucide icons — include `aria-label` on each for accessibility:
 
 | Tab | Icon | Route |
 |---|---|---|
-| Home | `Home` | `/dashboard` |
+| Home | `Home` | `/home` |
+| Find | `Search` | `/find` |
 | Roster | `CalendarDays` | `/roster` |
-| Deals | `Search` | `/search` |
-| Profile | `User` | `/profile` |
+| Saved | `Bookmark` | `/saved` |
 
 ```tsx
 // components/nav/BottomNav.tsx
@@ -522,35 +526,35 @@ Four tabs using Lucide icons — include `aria-label` on each for accessibility:
 
 ### Screens
 
-#### `/dashboard` — Home
-- Greeting with user name (text only, no emoji)
+#### `/home` — Home
+- Greeting with user name and `User` profile icon link (top right)
 - "Your next days off" summary card — `CalendarDays` icon, shows date range and night count
-- "Deals for your break" — 2-3 pre-computed DealCards for the soonest off window
-- Quick-access buttons: `CalendarDays` Set Roster · `Search` Browse Deals
+- "Cheapest returns for your break" — top destinations streamed via Suspense
+- Quick-access buttons: `CalendarDays` Edit Roster · `Search` Browse Deals
 
 #### `/roster` — Roster Input
+- Defaults to **Swing Pattern** tab on every load
 - Toggle: **Swing Pattern** | **Manual Calendar**
-- **Swing Pattern view:**
-  - Number picker: Days On (`HardHat` icon label) / Days Off (`Coffee` icon label)
-  - Date picker: "My next swing starts on..."
-  - Live preview: next 4 cycles as a simple timeline — work days filled navy, off days filled sky blue
-- **Manual view:**
-  - Month calendar grid — work days show `HardHat` tint, off days show `Coffee` tint
-  - Tap to toggle
+- **Swing Pattern view:** Days On / Days Off number pickers + cycle start date
+- **Manual view:** Month calendar grid — tap to toggle off/work. Switching to Manual auto-populates off days from the swing pattern (via `buildDayMap`) if no manual days exist yet.
 - Home airport selector (`MapPin` icon, IATA autocomplete, defaults to PER)
-- Save button — text only, no icon needed
+- Save → redirects to `/home`
 
-#### `/search` — Deals
-- Filter bar: Off window selector · Destination type (Beach / City / Any)
-- Section headers use Lucide icons: `PlaneTakeoff` Flights · `Hotel` Hotels
-- Each `FlightCard`:
-  - `PlaneTakeoff` origin · `PlaneLanding` destination · date
-  - `Clock` duration · `GitCommitHorizontal` stops · `Tag` price (real, from fli)
-  - "Book Flight" button with `ExternalLink` icon — opens Skyscanner affiliate link
-- Each `HotelCard`:
-  - `Hotel` icon · destination · `CalendarDays` check-in/out · nights count
-  - "Find Hotels" button with `ExternalLink` icon — opens Booking.com affiliate link
-- Hotel prices shown on Booking.com after redirect — do not attempt to surface them in-app
+#### `/find` — Deals
+- Off window dropdown (with `ChevronDown` icon) · Return / One-way toggle · Destination input
+- Filter chips when no destination entered: **Direct only** · **Domestic** · **Asia** · **Pacific**
+- Top destinations list with `SaveButton` (bookmark) on each row
+- When destination entered: `Hotel` section + `PlaneTakeoff` flight results with Skyscanner fallback on error
+- 429 from Google Flights shows "Too many searches right now" message
+
+#### `/saved` — Saved Destinations
+- Cards with gradient header (sky/blue palette, consistent per airport code) + dotted flight path SVG
+- Shows price at time of save + "from [next off date]"
+- Tap → `/saved/[dest]` detail page
+
+#### `/saved/[dest]` — Destination Detail
+- Gradient header (city name + IATA code)
+- List of all upcoming off windows — each tile links to `/find?dest=X&from=DATE&to=DATE`
 ---
 
 ## Environment Variables
@@ -629,7 +633,7 @@ npm install clsx tailwind-merge  # Class utilities
 ```
 # requirements.txt
 fastapi[standard]>=0.115.0  # includes uvicorn[standard] — use `fastapi run` to start
-flights==0.8.1              # Pin fli — reverse-engineers Google Flights; monitor releases
+flights==0.8.5              # Pin fli — reverse-engineers Google Flights; monitor releases
 ```
 
 > Use `python3.14` explicitly when creating virtual environments locally:
@@ -667,7 +671,7 @@ Add to `app/layout.tsx` metadata and create `public/manifest.json`:
 {
   "name": "DayWeFlyOut",
   "short_name": "DWFO",
-  "start_url": "/dashboard",
+  "start_url": "/home",
   "display": "standalone",
   "background_color": "#0F172A",
   "theme_color": "#0F172A",
