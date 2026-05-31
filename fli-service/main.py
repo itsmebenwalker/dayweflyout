@@ -4,7 +4,7 @@ from fli.models import (
     Airport, PassengerInfo, SeatType, MaxStops, SortBy,
     FlightSearchFilters, FlightSegment
 )
-from fli.search import SearchFlights, SearchFlightDates
+from fli.search import SearchFlights, SearchDates
 
 app = FastAPI()
 
@@ -67,7 +67,7 @@ async def search_flights(req: FlightSearchRequest):
 @app.post("/flights/cheapest-dates")
 async def cheapest_dates(req: DateRangeRequest):
     try:
-        results = SearchFlightDates().search(
+        results = SearchDates().search(
             origin=req.origin,
             destination=req.destination,
             start_date=req.start_date,
