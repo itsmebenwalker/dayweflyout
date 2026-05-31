@@ -120,7 +120,7 @@ async def search_flights(req: FlightSearchRequest):
             stops=MaxStops.ANY,
             sort_by=SortBy.CHEAPEST,
         )
-        results = SearchFlights().search(filters, currency="AUD")
+        results = SearchFlights().search(filters)
         return [_serialize_flight(f) for f in (results or [])[:10]]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -156,7 +156,7 @@ async def top_destinations(req: TopDestinationsRequest):
                 stops=MaxStops.ANY,
                 sort_by=SortBy.CHEAPEST,
             )
-            results = SearchFlights().search(filters, currency="AUD")
+            results = SearchFlights().search(filters)
             if results:
                 f = results[0]
                 first_leg = f.legs[0] if f.legs else None
