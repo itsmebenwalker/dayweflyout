@@ -226,7 +226,7 @@ export default function SearchContent() {
 
   return (
     <div className="p-4 max-w-lg mx-auto">
-      <h1 className="text-2xl font-semibold text-white mb-5">Deals</h1>
+      <h1 className="text-2xl font-semibold text-white mb-5">Find</h1>
 
       {/* Filter bar */}
       <div className="space-y-3 mb-6">
