@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { User, MapPin, LogOut, Plane, KeyRound, Eye, EyeOff, Users } from 'lucide-react'
+import Spinner from '@/components/ui/Spinner'
+import PasswordRules from '@/components/ui/PasswordRules'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AIRPORTS } from '@/lib/airports'
@@ -271,6 +273,7 @@ export default function ProfilePage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <PasswordRules password={newPassword} />
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-1.5">
@@ -294,7 +297,12 @@ export default function ProfilePage() {
               disabled={passwordSaving || !newPassword || !confirmPassword}
               className="w-full py-3 rounded-xl bg-sky-400 text-slate-900 font-semibold hover:bg-sky-300 transition-colors disabled:opacity-60"
             >
-              {passwordSaving ? 'Updating...' : passwordSaved ? 'Password updated' : 'Update password'}
+              {passwordSaving ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner size={16} />
+                  Updating...
+                </span>
+              ) : passwordSaved ? 'Password updated' : 'Update password'}
             </button>
           </div>
         )}
@@ -309,7 +317,12 @@ export default function ProfilePage() {
           disabled={saving}
           className="w-full py-3 px-4 rounded-xl bg-sky-400 text-slate-900 font-semibold hover:bg-sky-300 active:bg-sky-500 transition-colors disabled:opacity-60"
         >
-          {saving ? 'Saving...' : saved ? 'Saved' : 'Save changes'}
+          {saving ? (
+            <span className="inline-flex items-center gap-2">
+              <Spinner size={16} />
+              Saving...
+            </span>
+          ) : saved ? 'Saved' : 'Save changes'}
         </button>
       </div>
 

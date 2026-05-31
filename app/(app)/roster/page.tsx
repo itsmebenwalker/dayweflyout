@@ -1,14 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import Spinner from '@/components/ui/Spinner'
 import SwingPatternPicker from '@/components/roster/SwingPatternPicker'
 import RosterCalendar from '@/components/roster/RosterCalendar'
 import type { ManualDay, Roster } from '@/lib/types'
 import { AIRPORTS } from '@/lib/airports'
 export default function RosterPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -108,8 +111,7 @@ export default function RosterPage() {
     if (profileErr || rosterErr) {
       setError('Failed to save. Please try again.')
     } else {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      router.push('/dashboard')
     }
     setSaving(false)
   }
@@ -200,7 +202,12 @@ export default function RosterPage() {
         disabled={saving}
         className="w-full mt-6 py-3 px-4 rounded-xl bg-sky-400 text-slate-900 font-semibold hover:bg-sky-300 active:bg-sky-500 transition-colors disabled:opacity-60"
       >
-        {saving ? 'Saving...' : saved ? 'Saved' : 'Save roster'}
+        {saving ? (
+          <span className="inline-flex items-center gap-2">
+            <Spinner size={16} />
+            Saving...
+          </span>
+        ) : saved ? 'Saved' : 'Save roster'}
       </button>
     </div>
   )

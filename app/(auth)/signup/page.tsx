@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Plane, Mail } from 'lucide-react'
+import PasswordRules from '@/components/ui/PasswordRules'
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
@@ -137,6 +138,7 @@ export default function SignupPage() {
               className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 transition-colors"
               placeholder="12+ chars, upper, lower & number"
             />
+            <PasswordRules password={password} />
           </div>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}

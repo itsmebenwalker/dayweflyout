@@ -63,7 +63,7 @@ describe('ProfilePage', () => {
     fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'NoNumbersAtAllHere' } })
     fireEvent.change(screen.getByLabelText('Confirm new password'), { target: { value: 'NoNumbersAtAllHere' } })
     fireEvent.click(screen.getByRole('button', { name: /update password/i }))
-    expect(await screen.findByText(/at least one number/i)).toBeInTheDocument()
+    expect(await screen.findByText(/must contain at least one number/i)).toBeInTheDocument()
   })
 
   it('shows error when passwords do not match', async () => {

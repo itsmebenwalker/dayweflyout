@@ -63,6 +63,6 @@ describe('SignupPage', () => {
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'NoNumbersHereAtAll' } })
     fireEvent.submit(screen.getByRole('button', { name: /create account/i }).closest('form')!)
-    expect(await screen.findByText(/at least one number/i)).toBeInTheDocument()
+    expect(await screen.findByText(/must contain at least one number/i)).toBeInTheDocument()
   })
 })
