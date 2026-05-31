@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
+import { format, addDays, startOfDay } from 'date-fns'
 import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Spinner from '@/components/ui/Spinner'
 import SwingPatternPicker from '@/components/roster/SwingPatternPicker'
 import RosterCalendar from '@/components/roster/RosterCalendar'
+import { buildDayMap } from '@/lib/roster'
 import type { ManualDay, Roster } from '@/lib/types'
 import { AIRPORTS } from '@/lib/airports'
 export default function RosterPage() {
@@ -138,7 +139,24 @@ export default function RosterPage() {
           <button
             key={type}
             type="button"
-            onClick={() => setPatternType(type)}
+            onClick={() => {
+              setPatternType(type)
+              // Auto-populate manual calendar from swing pattern if no manual days exist yet
+              if (type === 'manual' && manualDays.length === 0 && daysOn && daysOff && cycleStartDate) {
+                const today = startOfDay(new Date())
+                const horizon = addDays(today, 180)
+                const dayMap = buildDayMap(
+                  { pattern_type: 'swing', days_on: daysOn, days_off: daysOff, cycle_start_date: cycleStartDate, manual_days: null } as Roster,
+                  today,
+                  horizon,
+                )
+                const populated: ManualDay[] = []
+                dayMap.forEach((dayType, date) => {
+                  if (dayType === 'off') populated.push({ date, type: 'off' })
+                })
+                setManualDays(populated)
+              }
+            }}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
               patternType === type
                 ? 'bg-sky-400 text-slate-900'

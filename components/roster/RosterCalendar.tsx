@@ -9,16 +9,13 @@ import {
   getDay,
   addMonths,
   subMonths,
-  addDays,
-  subDays,
   isBefore,
   startOfDay,
 } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { ManualDay } from '@/lib/types'
 
-// Mon-first single-letter headers
-const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 interface Props {
   manualDays: ManualDay[]
@@ -37,9 +34,10 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
   const { days, leadingBlanks } = useMemo(() => {
     const start = startOfMonth(currentMonth)
     const end = endOfMonth(currentMonth)
-    // Mon=0 … Sun=6 (getDay returns 0=Sun, so shift by -1 mod 7)
-    const leading = (getDay(start) + 6) % 7
-    return { days: eachDayOfInterval({ start, end }), leadingBlanks: leading }
+    return {
+      days: eachDayOfInterval({ start, end }),
+      leadingBlanks: getDay(start),
+    }
   }, [currentMonth])
 
   function toggleDay(day: Date) {
@@ -50,16 +48,6 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
     } else {
       onChange([...manualDays, { date: key, type: 'off' }])
     }
-  }
-
-  // A day is a boundary if it's off and its neighbour (prev or next) is not off.
-  // Boundary days show an × to hint they're the edge of a window.
-  function isBoundary(day: Date): boolean {
-    const key = format(day, 'yyyy-MM-dd')
-    if (!offSet.has(key)) return false
-    const prev = format(subDays(day, 1), 'yyyy-MM-dd')
-    const next = format(addDays(day, 1), 'yyyy-MM-dd')
-    return !offSet.has(prev) || !offSet.has(next)
   }
 
   return (
@@ -74,7 +62,7 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
         >
           <ChevronLeft size={20} className="text-slate-400" />
         </button>
-        <span className="text-white font-semibold">
+        <span className="text-white font-medium">
           {format(currentMonth, 'MMMM yyyy')}
         </span>
         <button
@@ -89,8 +77,8 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
 
       {/* Day-of-week headers */}
       <div className="grid grid-cols-7 mb-1">
-        {DOW.map((label, i) => (
-          <div key={i} className="text-center text-xs text-slate-500 font-medium py-1">
+        {DOW.map((label) => (
+          <div key={label} className="text-center text-xs text-slate-500 font-medium py-1">
             {label}
           </div>
         ))}
@@ -105,7 +93,6 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
           const key = format(day, 'yyyy-MM-dd')
           const isOff = offSet.has(key)
           const isPast = isBefore(day, today)
-          const boundary = isOff && isBoundary(day)
 
           return (
             <button
@@ -113,7 +100,7 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
               type="button"
               onClick={() => toggleDay(day)}
               disabled={isPast}
-              className={`aspect-square rounded-xl flex flex-col items-center justify-center text-sm font-medium transition-colors ${
+              className={`aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-colors ${
                 isOff
                   ? 'bg-sky-400 text-slate-900'
                   : isPast
@@ -121,10 +108,7 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
                     : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700 active:bg-slate-600'
               }`}
             >
-              <span>{format(day, 'd')}</span>
-              {boundary && (
-                <span className="text-[9px] leading-none opacity-70 mt-0.5">×</span>
-              )}
+              {format(day, 'd')}
             </button>
           )
         })}
@@ -133,12 +117,12 @@ export default function RosterCalendar({ manualDays, onChange }: Props) {
       {/* Legend */}
       <div className="flex gap-4 mt-4 text-xs text-slate-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-slate-700/50 inline-block" />
-          On swing
-        </span>
-        <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-sky-400 inline-block" />
           Days off
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded bg-slate-700/50 inline-block" />
+          Work
         </span>
       </div>
     </div>
