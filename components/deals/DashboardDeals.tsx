@@ -26,8 +26,8 @@ export default async function DashboardDeals({ homeAirport, window }: Props) {
       date: format(window.start, 'yyyy-MM-dd'),
       return_date: format(window.end, 'yyyy-MM-dd'),
     })
-  } catch {
-    // fli-service unavailable — fall back gracefully (empty list)
+  } catch (err) {
+    console.error('[DashboardDeals] topDestinations failed:', err)
   }
 
   if (deals.length === 0) {

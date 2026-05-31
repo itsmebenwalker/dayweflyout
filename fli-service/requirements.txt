@@ -1,2 +1,2 @@
 fastapi[standard]>=0.115.0
-flights==0.8.5
+flights==0.9.0
