@@ -34,8 +34,8 @@ export default async function DashboardPage() {
   const offWindows = roster ? getOffWindows(roster) : []
   const nextWindow = offWindows[0] ?? null
 
-  // Pick 2 popular destinations that aren't the home airport
-  const dealDests = POPULAR_DESTINATIONS.filter((d) => d !== homeAirport).slice(0, 2)
+  // Pick 4 popular flight destinations that aren't the home airport
+  const dealDests = POPULAR_DESTINATIONS.filter((d) => d !== homeAirport).slice(0, 4)
 
   return (
     <div className="p-4 max-w-lg mx-auto">
@@ -108,15 +108,6 @@ export default async function DashboardPage() {
                 href={`/search?origin=${homeAirport}&dest=${iata}&from=${format(nextWindow.start, 'yyyy-MM-dd')}&to=${format(nextWindow.end, 'yyyy-MM-dd')}`}
               />
             ))}
-            {dealDests[0] && (
-              <DealCard
-                type="hotel"
-                destination={airportCity(dealDests[0])}
-                from={nextWindow.start}
-                to={nextWindow.end}
-                href={`/search?origin=${homeAirport}&dest=${dealDests[0]}&from=${format(nextWindow.start, 'yyyy-MM-dd')}&to=${format(nextWindow.end, 'yyyy-MM-dd')}&type=hotel`}
-              />
-            )}
           </div>
         </>
       )}
