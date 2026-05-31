@@ -29,12 +29,19 @@ function formatDuration(minutes: number) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
+// Prefer aircodes (comprehensive); fall back to fli city_name if the code is unknown
+function resolveCity(code: string, cityName?: string): string {
+  const looked = airportCity(code)
+  return looked !== code ? looked : (cityName || code)
+}
+
 export default function SearchContent() {
   const searchParams = useSearchParams()
 
   const [homeAirport, setHomeAirport] = useState(searchParams.get('origin') ?? 'PER')
   const [destination, setDestination] = useState(searchParams.get('dest') ?? '')
   const [tripType, setTripType] = useState<TripType>('return')
+  const [travellers, setTravellers] = useState(1)
   const [windows, setWindows] = useState<DayWindow[]>([])
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [flights, setFlights] = useState<Flight[]>([])
@@ -52,13 +59,14 @@ export default function SearchContent() {
       if (!user) return
 
       const [profileRes, rosterRes] = await Promise.all([
-        supabase.from('profiles').select('home_airport').eq('id', user.id).single(),
+        supabase.from('profiles').select('home_airport, travellers').eq('id', user.id).single(),
         supabase.from('rosters').select('*').eq('user_id', user.id)
           .order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ])
 
-      if (profileRes.data && !searchParams.get('origin')) {
-        setHomeAirport(profileRes.data.home_airport)
+      if (profileRes.data) {
+        if (!searchParams.get('origin')) setHomeAirport(profileRes.data.home_airport)
+        setTravellers(profileRes.data.travellers ?? 1)
       }
       if (rosterRes.data) {
         const ws = getOffWindows(rosterRes.data as Roster)
@@ -93,6 +101,7 @@ export default function SearchContent() {
           origin: homeAirport,
           destination,
           date: format(selectedWindow!.start, 'yyyy-MM-dd'),
+          passengers: travellers,
         }
         if (tripType === 'return') {
           body.return_date = format(selectedWindow!.end, 'yyyy-MM-dd')
@@ -115,7 +124,7 @@ export default function SearchContent() {
 
     run()
     return () => { cancelled = true }
-  }, [destination, selectedWindow, homeAirport, tripType, dataLoading])
+  }, [destination, selectedWindow, homeAirport, tripType, travellers, dataLoading])
 
   // Discover top destinations when no destination is set
   useEffect(() => {
@@ -155,9 +164,9 @@ export default function SearchContent() {
 
     discover()
     return () => { cancelled = true }
-  }, [destination, selectedWindow, homeAirport, tripType, dataLoading])
+  }, [destination, selectedWindow, homeAirport, tripType, travellers, dataLoading])
 
-  const destCity = airportCity(destination)
+  const destinationCity = airportCity(destination)
 
   const fallbackFlightUrl =
     destination && selectedWindow
@@ -166,15 +175,17 @@ export default function SearchContent() {
           destination,
           date: selectedWindow.start,
           returnDate: tripType === 'return' ? selectedWindow.end : undefined,
+          travellers,
         })
       : null
 
   const hotelUrl =
     destination && selectedWindow
       ? buildBookingUrl({
-          destination: destCity,
+          destination: destinationCity,
           checkin: selectedWindow.start,
           checkout: selectedWindow.end,
+          travellers,
         })
       : null
 
@@ -292,7 +303,7 @@ export default function SearchContent() {
                     <div className="flex items-center gap-3">
                       <span className="text-slate-600 text-sm font-mono w-4 shrink-0">{i + 1}</span>
                       <div>
-                        <p className="text-white font-medium">{dest.city_name || airportCity(dest.destination)}</p>
+                        <p className="text-white font-medium">{resolveCity(dest.destination, dest.city_name)}</p>
                         <p className="text-slate-500 text-xs mt-0.5">
                           {dest.stops === 0 ? 'Direct' : `${dest.stops} stop${dest.stops > 1 ? 's' : ''}`}
                           {' · '}{formatDuration(dest.duration_minutes)}
@@ -300,10 +311,13 @@ export default function SearchContent() {
                         </p>
                       </div>
                     </div>
-                    <span className="flex items-center gap-1 text-sky-400 font-bold shrink-0">
-                      <Tag size={12} />
-                      ${dest.price}
-                    </span>
+                    <div className="shrink-0 text-right">
+                      <span className="text-slate-500 text-xs block">from</span>
+                      <span className="flex items-center gap-1 text-sky-400 font-bold">
+                        <Tag size={12} />
+                        ${dest.price}
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -327,10 +341,10 @@ export default function SearchContent() {
               <div className="flex items-center gap-2 mb-3">
                 <Hotel size={17} className="text-sky-400" />
                 <h2 className="text-white font-semibold">Hotels</h2>
-                <span className="text-slate-500 text-sm">{destCity}</span>
+                <span className="text-slate-500 text-sm">{destinationCity}</span>
               </div>
               <HotelCard
-                destination={destCity}
+                destination={destinationCity}
                 checkin={selectedWindow.start}
                 checkout={selectedWindow.end}
                 nights={Math.max(1, selectedWindow.durationNights - 1)}
@@ -404,6 +418,7 @@ export default function SearchContent() {
                   destination,
                   date: selectedWindow.start,
                   returnDate: tripType === 'return' ? selectedWindow.end : undefined,
+                  travellers,
                 })}
               />
             </div>

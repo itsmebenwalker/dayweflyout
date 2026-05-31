@@ -28,6 +28,7 @@ export interface Profile {
   id: string
   full_name: string | null
   home_airport: string
+  travellers: number
   created_at?: string
 }
 

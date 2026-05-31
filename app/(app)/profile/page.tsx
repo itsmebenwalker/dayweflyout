@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, MapPin, LogOut, Plane, KeyRound, Eye, EyeOff } from 'lucide-react'
+import { User, MapPin, LogOut, Plane, KeyRound, Eye, EyeOff, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AIRPORTS } from '@/lib/airports'
@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [homeAirport, setHomeAirport] = useState('PER')
+  const [travellers, setTravellers] = useState(1)
 
   // Password change
   const [showPasswordSection, setShowPasswordSection] = useState(false)
@@ -36,13 +37,14 @@ export default function ProfilePage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, home_airport')
+        .select('full_name, home_airport, travellers')
         .eq('id', user.id)
         .single()
 
       if (profile) {
         setFullName(profile.full_name ?? '')
         setHomeAirport(profile.home_airport ?? 'PER')
+        setTravellers(profile.travellers ?? 1)
       }
       setLoading(false)
     }
@@ -59,7 +61,7 @@ export default function ProfilePage() {
 
     const { error: err } = await supabase
       .from('profiles')
-      .update({ full_name: fullName, home_airport: homeAirport })
+      .update({ full_name: fullName, home_airport: homeAirport, travellers })
       .eq('id', user.id)
 
     if (err) {
@@ -177,6 +179,38 @@ export default function ProfilePage() {
               <option key={code} value={code}>{city}</option>
             ))}
           </datalist>
+        </div>
+
+        {/* Travellers */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-1.5">
+            <Users size={14} className="text-sky-400" />
+            Travellers
+          </label>
+          <div className="flex items-center gap-4 px-4 h-12 rounded-xl bg-slate-800 border border-slate-700">
+            <button
+              type="button"
+              onClick={() => setTravellers((v) => Math.max(1, v - 1))}
+              disabled={travellers <= 1}
+              aria-label="Decrease travellers"
+              className="w-8 h-8 rounded-lg bg-slate-700 text-white text-lg font-bold hover:bg-slate-600 transition-colors disabled:opacity-40"
+            >
+              −
+            </button>
+            <span className="flex-1 text-center text-white font-semibold text-lg tabular-nums">
+              {travellers}
+            </span>
+            <button
+              type="button"
+              onClick={() => setTravellers((v) => Math.min(9, v + 1))}
+              disabled={travellers >= 9}
+              aria-label="Increase travellers"
+              className="w-8 h-8 rounded-lg bg-slate-700 text-white text-lg font-bold hover:bg-slate-600 transition-colors disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Adults — used for flight and hotel searches</p>
         </div>
 
         <div>
