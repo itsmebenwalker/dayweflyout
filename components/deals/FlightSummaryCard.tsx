@@ -102,7 +102,7 @@ export default function FlightSummaryCard({ flights, bookUrl }: Props) {
         </div>
         <span className="flex items-center gap-1 text-sky-400 font-bold text-lg shrink-0">
           <Tag size={13} />
-          {priceMin === priceMax ? `$${priceMin}` : `$${priceMin}–$${priceMax}`}
+          {priceMin === priceMax ? `A$${priceMin}` : `A$${priceMin}–A$${priceMax}`}
         </span>
       </div>
 

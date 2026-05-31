@@ -315,7 +315,7 @@ export default function SearchContent() {
                       <span className="text-slate-500 text-xs block">from</span>
                       <span className="flex items-center gap-1 text-sky-400 font-bold">
                         <Tag size={12} />
-                        ${dest.price}
+                        A${dest.price}
                       </span>
                     </div>
                   </button>

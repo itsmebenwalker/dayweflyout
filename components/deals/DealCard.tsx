@@ -32,7 +32,7 @@ export default function DealCard({ type, destination, from, to, priceFrom, href 
           {format(from, 'd MMM')} – {format(to, 'd MMM')}
         </p>
         {priceFrom !== undefined && (
-          <p className="text-sky-400 text-sm font-semibold mt-0.5">from ${priceFrom}</p>
+          <p className="text-sky-400 text-sm font-semibold mt-0.5">from A${priceFrom}</p>
         )}
       </div>
 

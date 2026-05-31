@@ -21,12 +21,12 @@ describe('DealCard', () => {
 
   it('renders a price when priceFrom is provided', () => {
     render(<DealCard {...base} type="flight" priceFrom={299} />)
-    expect(screen.getByText(/from \$299/i)).toBeInTheDocument()
+    expect(screen.getByText(/from A\$299/i)).toBeInTheDocument()
   })
 
   it('does not render a price when priceFrom is absent', () => {
     render(<DealCard {...base} type="flight" />)
-    expect(screen.queryByText(/from \$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/from A\$/)).not.toBeInTheDocument()
   })
 
   it('renders date range', () => {
