@@ -14,9 +14,9 @@ describe('RosterCalendar', () => {
 
   it('renders all day-of-week headers', () => {
     render(<RosterCalendar manualDays={[]} onChange={onChange} />)
-    ;['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach((d) => {
-      expect(screen.getByText(d)).toBeInTheDocument()
-    })
+    // Mon-first single-letter headers — 7 cells
+    const headers = screen.getAllByText(/^[MTWFS]$/)
+    expect(headers).toHaveLength(7)
   })
 
   it('navigates to the next month', () => {
@@ -43,6 +43,6 @@ describe('RosterCalendar', () => {
   it('renders the work/off legend', () => {
     render(<RosterCalendar manualDays={[]} onChange={onChange} />)
     expect(screen.getByText('Days off')).toBeInTheDocument()
-    expect(screen.getByText('Work')).toBeInTheDocument()
+    expect(screen.getByText('On swing')).toBeInTheDocument()
   })
 })
