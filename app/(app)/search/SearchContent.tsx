@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
-import { PlaneTakeoff, Hotel, MapPin, ExternalLink, Tag } from 'lucide-react'
+import { PlaneTakeoff, Hotel, MapPin, ExternalLink, Tag, SlidersHorizontal } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOffWindows } from '@/lib/roster'
 import { buildSkyscannerUrl, buildBookingUrl } from '@/lib/affiliates'
@@ -13,6 +13,13 @@ import HotelCard from '@/components/deals/HotelCard'
 import type { Flight, Roster, DayWindow } from '@/lib/types'
 
 type TripType = 'return' | 'one-way'
+type RegionFilter = 'Domestic' | 'Asia' | 'Pacific'
+
+const REGION_CODES: Record<RegionFilter, string[]> = {
+  Domestic: ['SYD', 'MEL', 'BNE', 'OOL', 'CNS', 'ADL', 'DRW', 'TSV', 'CBR', 'HBA'],
+  Asia:     ['DPS', 'SIN', 'KUL', 'BKK', 'NRT', 'ICN', 'HKG', 'CGK', 'MNL', 'HAN', 'SGN'],
+  Pacific:  ['NAN', 'AKL', 'CHC', 'WLG', 'NOU', 'APW', 'PPT'],
+}
 
 interface TopDest {
   destination: string
@@ -50,6 +57,8 @@ export default function SearchContent() {
   const [dataLoading, setDataLoading] = useState(true)
   const [topDests, setTopDests] = useState<TopDest[]>([])
   const [discovering, setDiscovering] = useState(false)
+  const [directOnly, setDirectOnly] = useState(false)
+  const [regionFilter, setRegionFilter] = useState<RegionFilter | null>(null)
 
   // Load user's off windows and profile
   useEffect(() => {
@@ -166,6 +175,12 @@ export default function SearchContent() {
     return () => { cancelled = true }
   }, [destination, selectedWindow, homeAirport, tripType, travellers, dataLoading])
 
+  const filteredDests = topDests.filter(dest => {
+    if (directOnly && dest.stops !== 0) return false
+    if (regionFilter && !REGION_CODES[regionFilter].includes(dest.destination)) return false
+    return true
+  })
+
   const destinationCity = airportCity(destination)
 
   const fallbackFlightUrl =
@@ -275,6 +290,36 @@ export default function SearchContent() {
       {/* Discovery: top destinations when no dest entered */}
       {!destination && selectedWindow && (
         <>
+          {/* Filter chips */}
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setDirectOnly(d => !d)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                directOnly
+                  ? 'bg-sky-400 text-slate-900'
+                  : 'border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+              }`}
+            >
+              <SlidersHorizontal size={13} />
+              Direct only
+            </button>
+            {(['Domestic', 'Asia', 'Pacific'] as RegionFilter[]).map(region => (
+              <button
+                key={region}
+                type="button"
+                onClick={() => setRegionFilter(r => r === region ? null : region)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  regionFilter === region
+                    ? 'bg-sky-400 text-slate-900'
+                    : 'border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                }`}
+              >
+                {region}
+              </button>
+            ))}
+          </div>
+
           {discovering && (
             <div className="space-y-3 mb-6">
               <div className="h-6 w-56 bg-slate-800 rounded animate-pulse" />
@@ -284,7 +329,7 @@ export default function SearchContent() {
             </div>
           )}
 
-          {!discovering && topDests.length > 0 && (
+          {!discovering && filteredDests.length > 0 && (
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <PlaneTakeoff size={17} className="text-sky-400" />
@@ -293,7 +338,7 @@ export default function SearchContent() {
                 </h2>
               </div>
               <div className="space-y-2">
-                {topDests.map((dest, i) => (
+                {filteredDests.map((dest, i) => (
                   <button
                     key={dest.destination}
                     type="button"
@@ -322,6 +367,12 @@ export default function SearchContent() {
                 ))}
               </div>
             </div>
+          )}
+
+          {!discovering && topDests.length > 0 && filteredDests.length === 0 && (
+            <p className="text-slate-500 text-sm text-center py-6">
+              No {directOnly ? 'direct ' : ''}flights found{regionFilter ? ` for ${regionFilter}` : ''}. Try adjusting the filters.
+            </p>
           )}
 
           {!discovering && topDests.length === 0 && (

@@ -60,7 +60,7 @@ def _extract_city(airport_name: str) -> str:
     return airport_name
 
 
-POPULAR_DESTS = ["DPS", "SYD", "MEL", "BNE", "OOL", "CNS", "SIN", "ADL", "DRW", "TSV", "KUL", "BKK"]
+POPULAR_DESTS = ["DPS", "SYD", "MEL", "BNE", "OOL", "CNS", "SIN", "ADL", "DRW", "TSV", "KUL", "BKK", "NAN", "AKL"]
 
 
 class FlightSearchRequest(BaseModel):
