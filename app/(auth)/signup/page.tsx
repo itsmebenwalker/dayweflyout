@@ -1,18 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Plane } from 'lucide-react'
+import { Plane, Mail } from 'lucide-react'
 
 export default function SignupPage() {
-  const router = useRouter()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -20,7 +19,7 @@ export default function SignupPage() {
     setLoading(true)
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
@@ -32,8 +31,37 @@ export default function SignupPage() {
       return
     }
 
-    router.push('/dashboard')
-    router.refresh()
+    // If session is null, Supabase requires email confirmation before logging in
+    if (!data.session) {
+      setEmailSent(true)
+      setLoading(false)
+      return
+    }
+
+    // Email confirmation not required — go straight to dashboard
+    window.location.href = '/dashboard'
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#0F172A]">
+        <div className="w-full max-w-sm text-center">
+          <div className="bg-sky-400/10 rounded-full p-5 mb-5 inline-flex">
+            <Mail size={36} className="text-sky-400" />
+          </div>
+          <h1 className="text-2xl font-semibold text-white mb-2">Check your inbox</h1>
+          <p className="text-slate-400 text-sm mb-1">We sent a confirmation link to</p>
+          <p className="text-white font-semibold mb-5">{email}</p>
+          <p className="text-slate-500 text-sm mb-8">
+            Click the link in the email to verify your address and activate your account.
+            The link expires after 24 hours.
+          </p>
+          <p className="text-slate-600 text-xs">
+            Can&apos;t find it? Check your spam folder.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -97,9 +125,7 @@ export default function SignupPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
             type="submit"
