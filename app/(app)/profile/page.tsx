@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, MapPin, LogOut, Plane, KeyRound } from 'lucide-react'
+import { User, MapPin, LogOut, Plane, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AIRPORTS } from '@/lib/airports'
@@ -16,8 +16,15 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [homeAirport, setHomeAirport] = useState('PER')
-  const [resetSent, setResetSent] = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
+
+  // Password change
+  const [showPasswordSection, setShowPasswordSection] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordSaved, setPasswordSaved] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -64,15 +71,31 @@ export default function ProfilePage() {
     setSaving(false)
   }
 
-  async function handlePasswordReset() {
-    if (!email) return
-    setResetLoading(true)
+  async function handlePasswordChange() {
+    setPasswordError('')
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.')
+      return
+    }
+    setPasswordSaving(true)
     const supabase = createClient()
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`,
-    })
-    setResetSent(true)
-    setResetLoading(false)
+    const { error: err } = await supabase.auth.updateUser({ password: newPassword })
+    if (err) {
+      setPasswordError(err.message)
+    } else {
+      setPasswordSaved(true)
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => {
+        setPasswordSaved(false)
+        setShowPasswordSection(false)
+      }, 2000)
+    }
+    setPasswordSaving(false)
   }
 
   async function handleSignOut() {
@@ -104,7 +127,7 @@ export default function ProfilePage() {
         <p className="text-slate-400 text-sm">{email}</p>
       </div>
 
-      {/* Fields */}
+      {/* Profile fields */}
       <div className="space-y-4">
         <div>
           <label
@@ -173,17 +196,80 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* Account actions */}
-      <div className="mt-8 pt-6 border-t border-slate-800 space-y-3">
+      {/* Change password */}
+      <div className="mt-6">
         <button
           type="button"
-          onClick={handlePasswordReset}
-          disabled={resetLoading || resetSent}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 transition-colors disabled:opacity-60"
+          onClick={() => {
+            setShowPasswordSection((v) => !v)
+            setPasswordError('')
+            setNewPassword('')
+            setConfirmPassword('')
+          }}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
         >
-          <KeyRound size={16} />
-          {resetSent ? 'Reset email sent — check your inbox' : resetLoading ? 'Sending…' : 'Reset password'}
+          <span className="flex items-center gap-2 font-medium">
+            <KeyRound size={16} className="text-slate-400" />
+            Change password
+          </span>
+          <span className="text-slate-500 text-sm">{showPasswordSection ? 'Cancel' : 'Update'}</span>
         </button>
+
+        {showPasswordSection && (
+          <div className="mt-3 space-y-3 bg-slate-800/50 rounded-2xl p-4">
+            <div className="relative">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-300 mb-1.5">
+                New password
+              </label>
+              <input
+                id="newPassword"
+                type={showPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={6}
+                placeholder="At least 6 characters"
+                className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 bottom-3 text-slate-500 hover:text-slate-300"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-1.5">
+                Confirm new password
+              </label>
+              <input
+                id="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat new password"
+                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 transition-colors"
+              />
+            </div>
+
+            {passwordError && <p className="text-red-400 text-sm">{passwordError}</p>}
+
+            <button
+              type="button"
+              onClick={handlePasswordChange}
+              disabled={passwordSaving || !newPassword || !confirmPassword}
+              className="w-full py-3 rounded-xl bg-sky-400 text-slate-900 font-semibold hover:bg-sky-300 transition-colors disabled:opacity-60"
+            >
+              {passwordSaving ? 'Updating...' : passwordSaved ? 'Password updated' : 'Update password'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Sign out */}
+      <div className="mt-4 mb-8">
         <button
           type="button"
           onClick={handleSignOut}
