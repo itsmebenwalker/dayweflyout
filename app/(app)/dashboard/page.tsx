@@ -1,11 +1,11 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { CalendarDays, Search, MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getOffWindows } from '@/lib/roster'
-import DealCard from '@/components/deals/DealCard'
-import { airportCity, POPULAR_DESTINATIONS } from '@/lib/airports'
+import DashboardDeals from '@/components/deals/DashboardDeals'
 import type { Roster } from '@/lib/types'
 
 export default async function DashboardPage() {
@@ -33,9 +33,6 @@ export default async function DashboardPage() {
 
   const offWindows = roster ? getOffWindows(roster) : []
   const nextWindow = offWindows[0] ?? null
-
-  // Pick 4 popular flight destinations that aren't the home airport
-  const dealDests = POPULAR_DESTINATIONS.filter((d) => d !== homeAirport).slice(0, 4)
 
   return (
     <div className="p-4 max-w-lg mx-auto">
@@ -88,27 +85,29 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Deals for your break */}
+      {/* Deals — stream in via Suspense so greeting renders instantly */}
       {roster && nextWindow && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-white font-semibold">Deals for your break</h2>
-            <Link href="/search" className="text-sky-400 text-sm">
-              See all
+            <h2 className="text-white font-semibold">Cheapest returns for your break</h2>
+            <Link
+              href={`/search?origin=${homeAirport}&from=${format(nextWindow.start, 'yyyy-MM-dd')}&to=${format(nextWindow.end, 'yyyy-MM-dd')}`}
+              className="text-sky-400 text-sm"
+            >
+              See all 10
             </Link>
           </div>
-          <div className="space-y-3 mb-6">
-            {dealDests.map((iata) => (
-              <DealCard
-                key={iata}
-                type="flight"
-                destination={airportCity(iata)}
-                from={nextWindow.start}
-                to={nextWindow.end}
-                href={`/search?origin=${homeAirport}&dest=${iata}&from=${format(nextWindow.start, 'yyyy-MM-dd')}&to=${format(nextWindow.end, 'yyyy-MM-dd')}`}
-              />
-            ))}
-          </div>
+          <Suspense
+            fallback={
+              <div className="space-y-3 mb-6">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-16 bg-slate-800 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            }
+          >
+            <DashboardDeals homeAirport={homeAirport} window={nextWindow} />
+          </Suspense>
         </>
       )}
 

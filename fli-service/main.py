@@ -12,7 +12,7 @@ from fli.search import SearchFlights, SearchDates
 app = FastAPI()
 
 # Destinations to check when discovering cheapest options
-POPULAR_DESTS = ["DPS", "SYD", "MEL", "BNE", "OOL", "CNS", "SIN", "ADL", "DRW", "TSV"]
+POPULAR_DESTS = ["DPS", "SYD", "MEL", "BNE", "OOL", "CNS", "SIN", "ADL", "DRW", "TSV", "KUL", "BKK"]
 
 
 class FlightSearchRequest(BaseModel):
@@ -111,7 +111,7 @@ async def cheapest_dates(req: DateRangeRequest):
 
 @app.post("/flights/top-destinations")
 async def top_destinations(req: TopDestinationsRequest):
-    dests = [d for d in POPULAR_DESTS if d != req.origin][:8]
+    dests = [d for d in POPULAR_DESTS if d != req.origin][:12]
 
     def _search(dest: str):
         try:
@@ -144,7 +144,7 @@ async def top_destinations(req: TopDestinationsRequest):
         results = []
 
     valid = [r for r in results if r is not None]
-    return sorted(valid, key=lambda x: x["price"])[:5]
+    return sorted(valid, key=lambda x: x["price"])[:10]
 
 
 @app.get("/health")

@@ -158,7 +158,12 @@ export default function SearchContent() {
 
   const fallbackFlightUrl =
     destination && selectedWindow
-      ? buildSkyscannerUrl({ origin: homeAirport, destination, date: selectedWindow.start })
+      ? buildSkyscannerUrl({
+          origin: homeAirport,
+          destination,
+          date: selectedWindow.start,
+          returnDate: tripType === 'return' ? selectedWindow.end : undefined,
+        })
       : null
 
   const hotelUrl =
@@ -397,6 +402,7 @@ export default function SearchContent() {
                     origin: homeAirport,
                     destination,
                     date: selectedWindow.start,
+                    returnDate: tripType === 'return' ? selectedWindow.end : undefined,
                   })}
                 />
               ))}

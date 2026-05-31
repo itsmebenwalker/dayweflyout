@@ -5,13 +5,17 @@ export function buildSkyscannerUrl(params: {
   origin: string
   destination: string
   date: Date
+  returnDate?: Date
 }): string {
-  const d = params.date
-  const yy = String(d.getFullYear()).slice(2)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const dateStr = `${yy}${mm}${dd}`
-  const base = `https://www.skyscanner.com.au/transport/flights/${params.origin}/${params.destination}/${dateStr}/?adultsv2=1`
+  const fmt = (d: Date) => {
+    const yy = String(d.getFullYear()).slice(2)
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yy}${mm}${dd}`
+  }
+  const base = params.returnDate
+    ? `https://www.skyscanner.com.au/transport/flights/${params.origin}/${params.destination}/${fmt(params.date)}/${fmt(params.returnDate)}/?adultsv2=1`
+    : `https://www.skyscanner.com.au/transport/flights/${params.origin}/${params.destination}/${fmt(params.date)}/?adultsv2=1`
   return SKYSCANNER_ID ? `${base}&associateid=${SKYSCANNER_ID}` : base
 }
 

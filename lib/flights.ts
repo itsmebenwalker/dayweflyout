@@ -48,6 +48,7 @@ export async function topDestinations(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
     next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(50_000), // 50s — fli searches 12 dests concurrently
   })
   if (!res.ok) throw new Error('Top destinations search failed')
   return res.json()

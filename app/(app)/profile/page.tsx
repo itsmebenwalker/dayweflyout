@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, MapPin, LogOut, Plane } from 'lucide-react'
+import { User, MapPin, LogOut, Plane, KeyRound } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AIRPORTS } from '@/lib/airports'
@@ -16,6 +16,8 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [homeAirport, setHomeAirport] = useState('PER')
+  const [resetSent, setResetSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -60,6 +62,17 @@ export default function ProfilePage() {
       setTimeout(() => setSaved(false), 3000)
     }
     setSaving(false)
+  }
+
+  async function handlePasswordReset() {
+    if (!email) return
+    setResetLoading(true)
+    const supabase = createClient()
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/update-password`,
+    })
+    setResetSent(true)
+    setResetLoading(false)
   }
 
   async function handleSignOut() {
@@ -160,8 +173,17 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* Sign out */}
-      <div className="mt-8 pt-6 border-t border-slate-800">
+      {/* Account actions */}
+      <div className="mt-8 pt-6 border-t border-slate-800 space-y-3">
+        <button
+          type="button"
+          onClick={handlePasswordReset}
+          disabled={resetLoading || resetSent}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 transition-colors disabled:opacity-60"
+        >
+          <KeyRound size={16} />
+          {resetSent ? 'Reset email sent — check your inbox' : resetLoading ? 'Sending…' : 'Reset password'}
+        </button>
         <button
           type="button"
           onClick={handleSignOut}
