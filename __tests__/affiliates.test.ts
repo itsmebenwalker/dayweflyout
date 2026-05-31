@@ -32,6 +32,30 @@ describe('buildSkyscannerUrl', () => {
     })
     expect(url).not.toContain('associateid')
   })
+
+  it('builds a round-trip URL when returnDate is provided', () => {
+    const url = buildSkyscannerUrl({
+      origin: 'PER',
+      destination: 'DPS',
+      date: new Date(2026, 5, 14),    // Jun 14 2026
+      returnDate: new Date(2026, 5, 20), // Jun 20 2026
+    })
+    expect(url).toBe(
+      'https://www.skyscanner.com.au/transport/flights/PER/DPS/260614/260620/?adultsv2=1'
+    )
+  })
+
+  it('returns a one-way URL when returnDate is undefined', () => {
+    const url = buildSkyscannerUrl({
+      origin: 'PER',
+      destination: 'SYD',
+      date: new Date(2026, 5, 14),
+      returnDate: undefined,
+    })
+    expect(url).toContain('/PER/SYD/260614/?')
+    // One-way URL has exactly one 6-digit date segment, not two
+    expect(url).not.toMatch(/\/\d{6}\/\d{6}\//)
+  })
 })
 
 describe('buildBookingUrl', () => {

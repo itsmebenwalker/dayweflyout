@@ -11,6 +11,7 @@ interface Props {
 
 interface TopDest {
   destination: string
+  city_name?: string
   price: number
   duration_minutes: number
   stops: number

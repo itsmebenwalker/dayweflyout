@@ -16,6 +16,7 @@ type TripType = 'return' | 'one-way'
 
 interface TopDest {
   destination: string
+  city_name?: string  // from fli payload — more accurate than static lookup
   price: number
   duration_minutes: number
   stops: number
@@ -291,7 +292,7 @@ export default function SearchContent() {
                     <div className="flex items-center gap-3">
                       <span className="text-slate-600 text-sm font-mono w-4 shrink-0">{i + 1}</span>
                       <div>
-                        <p className="text-white font-medium">{airportCity(dest.destination)}</p>
+                        <p className="text-white font-medium">{dest.city_name || airportCity(dest.destination)}</p>
                         <p className="text-slate-500 text-xs mt-0.5">
                           {dest.stops === 0 ? 'Direct' : `${dest.stops} stop${dest.stops > 1 ? 's' : ''}`}
                           {' · '}{formatDuration(dest.duration_minutes)}

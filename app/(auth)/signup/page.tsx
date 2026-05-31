@@ -16,6 +16,20 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (password.length < 12) {
+      setError('Password must be at least 12 characters.')
+      return
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+      setError('Password must contain uppercase and lowercase letters.')
+      return
+    }
+    if (!/[0-9]/.test(password)) {
+      setError('Password must contain at least one number.')
+      return
+    }
+
     setLoading(true)
 
     const supabase = createClient()
@@ -117,11 +131,11 @@ export default function SignupPage() {
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={12}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 transition-colors"
-              placeholder="••••••••"
+              placeholder="12+ chars, upper, lower & number"
             />
           </div>
 

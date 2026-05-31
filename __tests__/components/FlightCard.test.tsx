@@ -65,3 +65,52 @@ describe('FlightCard', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 })
+
+const roundTripFlight: Flight = {
+  price: 450,
+  duration_minutes: 460,
+  stops: 0,
+  legs: [
+    {
+      airline: 'AirAsia',
+      flight_number: 'AK77',
+      departure: '2026-06-14T20:00:00',
+      arrival: '2026-06-14T23:40:00',
+      from: 'PER',
+      to: 'DPS',
+    },
+    {
+      airline: 'AirAsia',
+      flight_number: 'AK78',
+      departure: '2026-06-20T09:00:00',
+      arrival: '2026-06-20T12:40:00',
+      from: 'DPS',
+      to: 'PER',
+    },
+  ],
+}
+
+describe('FlightCard — round trip', () => {
+  it('shows the outbound route (not PER→PER)', () => {
+    render(<FlightCard flight={roundTripFlight} bookUrl="https://skyscanner.com" />)
+    expect(screen.getByText('PER')).toBeInTheDocument()
+    expect(screen.getByText('DPS')).toBeInTheDocument()
+    // PER should appear once in the route display, not twice
+    expect(screen.queryAllByText('PER')).toHaveLength(1)
+  })
+
+  it('shows the Return badge', () => {
+    render(<FlightCard flight={roundTripFlight} bookUrl="https://skyscanner.com" />)
+    expect(screen.getByText('Return')).toBeInTheDocument()
+  })
+
+  it('renders "Book Return Flight" CTA', () => {
+    render(<FlightCard flight={roundTripFlight} bookUrl="https://skyscanner.com" />)
+    expect(screen.getByRole('link', { name: /book return flight/i })).toBeInTheDocument()
+  })
+
+  it('does not show Return badge for a one-way flight', () => {
+    render(<FlightCard flight={mockFlight} bookUrl="https://skyscanner.com" />)
+    expect(screen.queryByText('Return')).not.toBeInTheDocument()
+  })
+})

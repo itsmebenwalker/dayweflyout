@@ -1,5 +1,6 @@
 from typing import Optional
 import asyncio
+import re
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -10,6 +11,37 @@ from fli.models import (
 from fli.search import SearchFlights, SearchDates
 
 app = FastAPI()
+
+
+def _extract_city(airport_name: str) -> str:
+    """
+    Extract a display-friendly city name from a full airport name.
+
+    Examples:
+      "Kuala Lumpur International Airport" → "Kuala Lumpur"
+      "Sydney (Kingsford Smith) Airport"   → "Sydney"
+      "Ngurah Rai (Bali) International Airport" → "Bali"
+      "Perth Airport" → "Perth"
+    """
+    # "City (Nickname) Airport" — return the text before the parenthesis
+    before_paren = re.match(r'^([^(]+?)\s*\(', airport_name)
+    if before_paren:
+        city = before_paren.group(1).strip()
+        if city:
+            return city
+    # "(City) Something Airport" — return the parenthesised word
+    in_paren = re.search(r'\(([^)]+)\)', airport_name)
+    if in_paren:
+        return in_paren.group(1)
+    # Strip trailing airport-type words
+    for suffix in [
+        " International Airport", " Int'l Airport", " Intl Airport",
+        " Regional Airport", " Airport", " Intl",
+    ]:
+        if airport_name.lower().endswith(suffix.lower()):
+            return airport_name[: -len(suffix)].strip()
+    return airport_name
+
 
 # Destinations to check when discovering cheapest options
 POPULAR_DESTS = ["DPS", "SYD", "MEL", "BNE", "OOL", "CNS", "SIN", "ADL", "DRW", "TSV", "KUL", "BKK"]
@@ -127,12 +159,18 @@ async def top_destinations(req: TopDestinationsRequest):
             results = SearchFlights().search(filters)
             if results:
                 f = results[0]
+                first_leg = f.legs[0] if f.legs else None
+                city_name = (
+                    _extract_city(first_leg.arrival_airport.value)
+                    if first_leg else dest
+                )
                 return {
                     "destination": dest,
+                    "city_name": city_name,
                     "price": f.price,
                     "duration_minutes": f.duration,
                     "stops": f.stops,
-                    "airline": f.legs[0].airline.value if f.legs else "",
+                    "airline": first_leg.airline.value if first_leg else "",
                 }
         except Exception:
             return None

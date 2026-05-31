@@ -73,8 +73,16 @@ export default function ProfilePage() {
 
   async function handlePasswordChange() {
     setPasswordError('')
-    if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters.')
+    if (newPassword.length < 12) {
+      setPasswordError('Password must be at least 12 characters.')
+      return
+    }
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) {
+      setPasswordError('Password must contain uppercase and lowercase letters.')
+      return
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      setPasswordError('Password must contain at least one number.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -184,19 +192,9 @@ export default function ProfilePage() {
           />
         </div>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full py-3 px-4 rounded-xl bg-sky-400 text-slate-900 font-semibold hover:bg-sky-300 active:bg-sky-500 transition-colors disabled:opacity-60"
-        >
-          {saving ? 'Saving...' : saved ? 'Saved' : 'Save changes'}
-        </button>
       </div>
 
-      {/* Change password */}
+      {/* Change password — above Save */}
       <div className="mt-6">
         <button
           type="button"
@@ -226,8 +224,8 @@ export default function ProfilePage() {
                 type={showPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                minLength={6}
-                placeholder="At least 6 characters"
+                minLength={12}
+                placeholder="12+ chars, upper, lower & number"
                 className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 transition-colors"
               />
               <button
@@ -266,6 +264,19 @@ export default function ProfilePage() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Save changes */}
+      <div className="mt-4 space-y-2">
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full py-3 px-4 rounded-xl bg-sky-400 text-slate-900 font-semibold hover:bg-sky-300 active:bg-sky-500 transition-colors disabled:opacity-60"
+        >
+          {saving ? 'Saving...' : saved ? 'Saved' : 'Save changes'}
+        </button>
       </div>
 
       {/* Sign out */}

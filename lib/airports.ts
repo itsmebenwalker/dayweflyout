@@ -25,6 +25,16 @@ export const AIRPORTS: Airport[] = [
   { code: 'SIN', city: 'Singapore' },
   { code: 'PPP', city: 'Whitsunday Coast' },
   { code: 'MCY', city: 'Sunshine Coast' },
+  // International destinations whose airport names don't contain the city name
+  { code: 'KUL', city: 'Kuala Lumpur' },
+  { code: 'BKK', city: 'Bangkok' },
+  { code: 'DMK', city: 'Bangkok' },
+  { code: 'NRT', city: 'Tokyo' },
+  { code: 'HND', city: 'Tokyo' },
+  { code: 'ICN', city: 'Seoul' },
+  { code: 'HKG', city: 'Hong Kong' },
+  { code: 'CGK', city: 'Jakarta' },
+  { code: 'MNL', city: 'Manila' },
 ]
 
 export function airportCity(code: string): string {
