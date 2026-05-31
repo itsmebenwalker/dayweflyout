@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { CalendarDays, Search, MapPin } from 'lucide-react'
+import { CalendarDays, Search, MapPin, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getOffWindows } from '@/lib/roster'
 import DashboardDeals from '@/components/deals/DashboardDeals'
@@ -37,7 +37,12 @@ export default async function DashboardPage() {
   return (
     <div className="p-4 max-w-lg mx-auto">
       {/* Greeting */}
-      <h1 className="text-2xl font-semibold text-white mb-1">Hey, {firstName}</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-2xl font-semibold text-white">Hey, {firstName}</h1>
+        <Link href="/profile" aria-label="Profile" className="p-1.5 text-slate-500 hover:text-slate-300 transition-colors">
+          <User size={22} strokeWidth={1.5} />
+        </Link>
+      </div>
       <p className="text-slate-400 text-sm mb-6">Your FIFO deal finder</p>
 
       {/* No roster CTA */}

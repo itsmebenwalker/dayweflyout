@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { PlaneTakeoff, Hotel, MapPin, ExternalLink, Tag, SlidersHorizontal } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import SaveButton from '@/components/deals/SaveButton'
 import { getOffWindows } from '@/lib/roster'
 import { buildSkyscannerUrl, buildBookingUrl } from '@/lib/affiliates'
 import { AIRPORTS, airportCity } from '@/lib/airports'
@@ -59,6 +60,8 @@ export default function SearchContent() {
   const [discovering, setDiscovering] = useState(false)
   const [directOnly, setDirectOnly] = useState(false)
   const [regionFilter, setRegionFilter] = useState<RegionFilter | null>(null)
+  // dest code → saved_deal id
+  const [savedMap, setSavedMap] = useState<Map<string, string>>(new Map())
 
   // Load user's off windows and profile
   useEffect(() => {
@@ -67,11 +70,17 @@ export default function SearchContent() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const [profileRes, rosterRes] = await Promise.all([
+      const [profileRes, rosterRes, savedRes] = await Promise.all([
         supabase.from('profiles').select('home_airport, travellers').eq('id', user.id).single(),
         supabase.from('rosters').select('*').eq('user_id', user.id)
           .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('saved_deals').select('id, destination').eq('user_id', user.id).eq('deal_type', 'flight'),
       ])
+      if (savedRes.data) {
+        const m = new Map<string, string>()
+        savedRes.data.forEach((d: { id: string; destination: string }) => m.set(d.destination, d.id))
+        setSavedMap(m)
+      }
 
       if (profileRes.data) {
         if (!searchParams.get('origin')) setHomeAirport(profileRes.data.home_airport)
@@ -356,12 +365,36 @@ export default function SearchContent() {
                         </p>
                       </div>
                     </div>
-                    <div className="shrink-0 text-right">
-                      <span className="text-slate-500 text-xs block">from</span>
-                      <span className="flex items-center gap-1 text-sky-400 font-bold">
-                        <Tag size={12} />
-                        A${dest.price}
-                      </span>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <div className="text-right">
+                        <span className="text-slate-500 text-xs block">from</span>
+                        <span className="flex items-center gap-1 text-sky-400 font-bold">
+                          <Tag size={12} />
+                          A${dest.price}
+                        </span>
+                      </div>
+                      <SaveButton
+                        destination={dest.destination}
+                        cityName={resolveCity(dest.destination, dest.city_name)}
+                        affiliateUrl={fallbackFlightUrl ?? '#'}
+                        metadata={{
+                          trip_type: tripType,
+                          price: dest.price,
+                          airline: dest.airline,
+                          stops: dest.stops,
+                          duration_minutes: dest.duration_minutes,
+                        }}
+                        isSaved={savedMap.has(dest.destination)}
+                        savedId={savedMap.get(dest.destination)}
+                        onToggle={(saved, id) => {
+                          setSavedMap(m => {
+                            const next = new Map(m)
+                            if (saved && id) next.set(dest.destination, id)
+                            else next.delete(dest.destination)
+                            return next
+                          })
+                        }}
+                      />
                     </div>
                   </button>
                 ))}
