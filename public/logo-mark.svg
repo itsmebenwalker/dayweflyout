@@ -1,0 +1,17 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Day We Fly Out">
+  <defs>
+    <linearGradient id="dwfo-sky" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A7FC4"></stop>
+      <stop offset="0.55" stop-color="#1268A6"></stop>
+      <stop offset="1" stop-color="#13A5A0"></stop>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#dwfo-sky)"></rect>
+  
+  <path d="M15 48 Q32 49 48 18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-dasharray="2.5 6"></path>
+  
+  <circle cx="15" cy="48" r="4.2" fill="#FFFFFF"></circle>
+  
+  <circle cx="48" cy="18" r="8.5" fill="#FFFFFF"></circle>
+  <circle cx="48" cy="18" r="6" fill="#F2592F"></circle>
+</svg>
